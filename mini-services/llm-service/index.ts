@@ -146,7 +146,7 @@ const server = Bun.serve({
 });
 
 // ── Proxy /api/* to FastAPI at http://localhost:8000 ──
-const BACKEND = 'http://localhost:8000';
+const BACKEND = 'http://21.0.19.237:8000';
 
 async function proxyToBackend(req: Request, url: URL): Promise<Response> {
   // Strip the gateway-only XTransformPort query param
