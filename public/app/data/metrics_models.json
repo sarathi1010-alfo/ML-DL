@@ -1,0 +1,72 @@
+[
+  {
+    "model": "Churn XGBoost",
+    "accuracy": 0.788,
+    "f1": 0.361,
+    "rmse": 0.0,
+    "latency_ms": 6,
+    "calls": 3,
+    "error_rate": 0.0,
+    "status": "healthy"
+  },
+  {
+    "model": "Premium XGBoost",
+    "accuracy": 0.0,
+    "f1": 0.0,
+    "rmse": 77.969,
+    "latency_ms": 0,
+    "calls": 0,
+    "error_rate": 0.0,
+    "status": "healthy"
+  },
+  {
+    "model": "Damage ResNet50-CV",
+    "accuracy": 1.0,
+    "f1": 1.0,
+    "rmse": 0.0,
+    "latency_ms": 0,
+    "calls": 0,
+    "error_rate": 0.0,
+    "status": "healthy"
+  },
+  {
+    "model": "Forecast Attention-LSTM",
+    "accuracy": 0.0,
+    "f1": 0.0,
+    "rmse": 5.78,
+    "latency_ms": 0,
+    "calls": 0,
+    "error_rate": 0.0,
+    "status": "healthy"
+  },
+  {
+    "model": "BERT TF-IDF Proxy",
+    "accuracy": 0.969,
+    "f1": 0.969,
+    "rmse": 0.0,
+    "latency_ms": 0,
+    "calls": 0,
+    "error_rate": 0.0,
+    "status": "healthy"
+  },
+  {
+    "model": "RAG FAISS",
+    "accuracy": 0.0,
+    "f1": 0.0,
+    "rmse": 0.0,
+    "latency_ms": 0,
+    "calls": 0,
+    "error_rate": 0.0,
+    "status": "healthy"
+  },
+  {
+    "model": "SLM TinyLlama-Q4",
+    "accuracy": 0.0,
+    "f1": 0.0,
+    "rmse": 0.0,
+    "latency_ms": 0,
+    "calls": 0,
+    "error_rate": 0.0,
+    "status": "healthy"
+  }
+]

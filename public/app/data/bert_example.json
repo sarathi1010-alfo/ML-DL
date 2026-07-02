@@ -1,0 +1,39 @@
+{
+  "category": "Technical",
+  "confidence": 0.643,
+  "categories": [
+    {
+      "label": "Technical",
+      "score": 0.643
+    },
+    {
+      "label": "Network",
+      "score": 0.314
+    },
+    {
+      "label": "Billing",
+      "score": 0.023
+    },
+    {
+      "label": "General",
+      "score": 0.02
+    }
+  ],
+  "sentiment": {
+    "label": "Negative",
+    "score": 0.74
+  },
+  "urgency": "Medium",
+  "entities": [
+    {
+      "text": "internet",
+      "type": "ISSUE"
+    },
+    {
+      "text": "router",
+      "type": "ISSUE"
+    }
+  ],
+  "model": "BERT (TF-IDF + LogReg deployment proxy)",
+  "latency_ms": 2
+}

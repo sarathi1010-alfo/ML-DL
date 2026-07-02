@@ -1,0 +1,268 @@
+{
+  "api_usage": {
+    "total_requests": 697,
+    "requests_per_min": 2.17,
+    "success_rate": 0.9986
+  },
+  "latency": {
+    "p50_ms": 13.08,
+    "p95_ms": 22.48,
+    "p99_ms": 44.59
+  },
+  "error_rate": 0.0014,
+  "model_metrics": [
+    {
+      "model": "Churn XGBoost",
+      "accuracy": 0.788,
+      "f1": 0.361,
+      "rmse": 0.0,
+      "latency_ms": 6,
+      "calls": 3,
+      "error_rate": 0.0,
+      "status": "healthy"
+    },
+    {
+      "model": "Premium XGBoost",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rmse": 77.969,
+      "latency_ms": 0,
+      "calls": 0,
+      "error_rate": 0.0,
+      "status": "healthy"
+    },
+    {
+      "model": "Damage ResNet50-CV",
+      "accuracy": 1.0,
+      "f1": 1.0,
+      "rmse": 0.0,
+      "latency_ms": 0,
+      "calls": 0,
+      "error_rate": 0.0,
+      "status": "healthy"
+    },
+    {
+      "model": "Forecast Attention-LSTM",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rmse": 5.78,
+      "latency_ms": 0,
+      "calls": 0,
+      "error_rate": 0.0,
+      "status": "healthy"
+    },
+    {
+      "model": "BERT TF-IDF Proxy",
+      "accuracy": 0.969,
+      "f1": 0.969,
+      "rmse": 0.0,
+      "latency_ms": 0,
+      "calls": 0,
+      "error_rate": 0.0,
+      "status": "healthy"
+    },
+    {
+      "model": "RAG FAISS",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rmse": 0.0,
+      "latency_ms": 0,
+      "calls": 0,
+      "error_rate": 0.0,
+      "status": "healthy"
+    },
+    {
+      "model": "SLM TinyLlama-Q4",
+      "accuracy": 0.0,
+      "f1": 0.0,
+      "rmse": 0.0,
+      "latency_ms": 0,
+      "calls": 0,
+      "error_rate": 0.0,
+      "status": "healthy"
+    }
+  ],
+  "system": {
+    "cpu_percent": 4.6,
+    "memory_percent": 35.4,
+    "disk_percent": 20.7
+  },
+  "endpoints": [
+    {
+      "path": "/api/v1/health",
+      "calls": 654,
+      "avg_latency_ms": 14.38,
+      "error_rate": 0.0
+    },
+    {
+      "path": "/api/v1/metrics",
+      "calls": 19,
+      "avg_latency_ms": 4.53,
+      "error_rate": 0.0
+    },
+    {
+      "path": "/api/v1/predictions",
+      "calls": 20,
+      "avg_latency_ms": 7.6,
+      "error_rate": 0.0
+    },
+    {
+      "path": "/api/v1/predict/churn",
+      "calls": 3,
+      "avg_latency_ms": 11.6,
+      "error_rate": 0.0
+    },
+    {
+      "path": "/papi/v1/health",
+      "calls": 1,
+      "avg_latency_ms": 0.52,
+      "error_rate": 1.0
+    }
+  ],
+  "time_series": [
+    {
+      "timestamp": "2026-07-02T22:48:21.608583+00:00",
+      "requests": 2,
+      "latency_ms": 13.1224345004739,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:49:21.648730+00:00",
+      "requests": 2,
+      "latency_ms": 18.36512599948037,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:50:21.635486+00:00",
+      "requests": 2,
+      "latency_ms": 12.922119498398388,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:51:21.627982+00:00",
+      "requests": 2,
+      "latency_ms": 11.961174001044128,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:52:21.626186+00:00",
+      "requests": 2,
+      "latency_ms": 15.291686000637128,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:53:21.609049+00:00",
+      "requests": 2,
+      "latency_ms": 18.475859498721547,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:54:22.189941+00:00",
+      "requests": 2,
+      "latency_ms": 18.674866998480866,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:55:21.605289+00:00",
+      "requests": 2,
+      "latency_ms": 13.284313499752898,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:56:21.615838+00:00",
+      "requests": 2,
+      "latency_ms": 14.791116998821963,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:57:21.632348+00:00",
+      "requests": 2,
+      "latency_ms": 11.497689498355612,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:58:22.007199+00:00",
+      "requests": 2,
+      "latency_ms": 11.837016501885955,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T22:59:03.244821+00:00",
+      "requests": 6,
+      "latency_ms": 7.765314666054716,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:00:03.278209+00:00",
+      "requests": 5,
+      "latency_ms": 8.06870259984862,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:01:00.583555+00:00",
+      "requests": 14,
+      "latency_ms": 9.566581500101686,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:02:16.409105+00:00",
+      "requests": 2,
+      "latency_ms": 15.530835000390653,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:03:16.442893+00:00",
+      "requests": 3,
+      "latency_ms": 8.049820667414073,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:04:16.869107+00:00",
+      "requests": 7,
+      "latency_ms": 8.162805713904422,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:05:20.943399+00:00",
+      "requests": 3,
+      "latency_ms": 7.940275999620401,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:06:20.815390+00:00",
+      "requests": 6,
+      "latency_ms": 12.03372766637282,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:07:04.049848+00:00",
+      "requests": 2,
+      "latency_ms": 14.018165500601754,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:08:00.537673+00:00",
+      "requests": 3,
+      "latency_ms": 9.177886999774879,
+      "errors": 1
+    },
+    {
+      "timestamp": "2026-07-02T23:10:56.725021+00:00",
+      "requests": 5,
+      "latency_ms": 6.617815999197774,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:11:26.776756+00:00",
+      "requests": 7,
+      "latency_ms": 7.5173212852470375,
+      "errors": 0
+    },
+    {
+      "timestamp": "2026-07-02T23:12:29.291509+00:00",
+      "requests": 2,
+      "latency_ms": 13.996365501952823,
+      "errors": 0
+    }
+  ]
+}

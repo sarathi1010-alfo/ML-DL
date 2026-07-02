@@ -1,0 +1,191 @@
+{
+  "forecast": [
+    {
+      "day": 1,
+      "value": 116.6,
+      "lower": 106.57,
+      "upper": 126.64
+    },
+    {
+      "day": 2,
+      "value": 113.22,
+      "lower": 103.19,
+      "upper": 123.26
+    },
+    {
+      "day": 3,
+      "value": 108.15,
+      "lower": 98.12,
+      "upper": 118.19
+    },
+    {
+      "day": 4,
+      "value": 112.6,
+      "lower": 102.57,
+      "upper": 122.64
+    },
+    {
+      "day": 5,
+      "value": 114.83,
+      "lower": 104.8,
+      "upper": 124.87
+    },
+    {
+      "day": 6,
+      "value": 114.17,
+      "lower": 104.13,
+      "upper": 124.2
+    },
+    {
+      "day": 7,
+      "value": 110.54,
+      "lower": 100.51,
+      "upper": 120.58
+    },
+    {
+      "day": 8,
+      "value": 105.72,
+      "lower": 95.68,
+      "upper": 115.75
+    },
+    {
+      "day": 9,
+      "value": 104.01,
+      "lower": 93.97,
+      "upper": 114.04
+    },
+    {
+      "day": 10,
+      "value": 105.36,
+      "lower": 95.33,
+      "upper": 115.4
+    },
+    {
+      "day": 11,
+      "value": 109.84,
+      "lower": 99.8,
+      "upper": 119.87
+    },
+    {
+      "day": 12,
+      "value": 114.43,
+      "lower": 104.39,
+      "upper": 124.46
+    },
+    {
+      "day": 13,
+      "value": 114.64,
+      "lower": 104.61,
+      "upper": 124.68
+    },
+    {
+      "day": 14,
+      "value": 114.31,
+      "lower": 104.27,
+      "upper": 124.34
+    },
+    {
+      "day": 15,
+      "value": 109.78,
+      "lower": 99.74,
+      "upper": 119.81
+    },
+    {
+      "day": 16,
+      "value": 112.67,
+      "lower": 102.63,
+      "upper": 122.7
+    },
+    {
+      "day": 17,
+      "value": 116.95,
+      "lower": 106.92,
+      "upper": 126.99
+    },
+    {
+      "day": 18,
+      "value": 123.09,
+      "lower": 113.05,
+      "upper": 133.12
+    },
+    {
+      "day": 19,
+      "value": 124.78,
+      "lower": 114.74,
+      "upper": 134.81
+    },
+    {
+      "day": 20,
+      "value": 131.14,
+      "lower": 121.1,
+      "upper": 141.17
+    },
+    {
+      "day": 21,
+      "value": 126.05,
+      "lower": 116.01,
+      "upper": 136.09
+    },
+    {
+      "day": 22,
+      "value": 125.77,
+      "lower": 115.74,
+      "upper": 135.81
+    },
+    {
+      "day": 23,
+      "value": 125.97,
+      "lower": 115.93,
+      "upper": 136.0
+    },
+    {
+      "day": 24,
+      "value": 126.26,
+      "lower": 116.22,
+      "upper": 136.29
+    },
+    {
+      "day": 25,
+      "value": 126.91,
+      "lower": 116.87,
+      "upper": 136.94
+    },
+    {
+      "day": 26,
+      "value": 127.8,
+      "lower": 117.77,
+      "upper": 137.84
+    },
+    {
+      "day": 27,
+      "value": 126.94,
+      "lower": 116.91,
+      "upper": 136.98
+    },
+    {
+      "day": 28,
+      "value": 121.56,
+      "lower": 111.52,
+      "upper": 131.59
+    },
+    {
+      "day": 29,
+      "value": 119.44,
+      "lower": 109.41,
+      "upper": 129.48
+    },
+    {
+      "day": 30,
+      "value": 116.73,
+      "lower": 106.7,
+      "upper": 126.77
+    }
+  ],
+  "metrics": {
+    "mae": 4.684,
+    "rmse": 5.78,
+    "r2": 0.538
+  },
+  "model": "Attention-LSTM (lag features + LightGBM)",
+  "latency_ms": 157
+}

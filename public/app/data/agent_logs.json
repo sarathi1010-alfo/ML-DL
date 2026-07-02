@@ -1,0 +1,67 @@
+{
+  "logs": [
+    {
+      "id": 7,
+      "task": "Onboard new employee",
+      "employee": "John Doe",
+      "steps_count": 4,
+      "status": "completed",
+      "created_at": "2026-07-02T17:27:20.847157",
+      "total_latency_ms": 3007
+    },
+    {
+      "id": 6,
+      "task": "Onboard new employee",
+      "employee": "John Doe",
+      "steps_count": 4,
+      "status": "completed",
+      "created_at": "2026-07-02T16:52:33.211464",
+      "total_latency_ms": 2851
+    },
+    {
+      "id": 5,
+      "task": "Onboard new employee",
+      "employee": "Maya Patel",
+      "steps_count": 4,
+      "status": "completed",
+      "created_at": "2026-07-02T16:47:51.509483",
+      "total_latency_ms": 6284
+    },
+    {
+      "id": 4,
+      "task": "Onboard new employee",
+      "employee": "John Doe",
+      "steps_count": 4,
+      "status": "completed",
+      "created_at": "2026-07-02T16:46:58.477487",
+      "total_latency_ms": 3013
+    },
+    {
+      "id": 3,
+      "task": "Onboard new employee",
+      "employee": "Sarah Chen",
+      "steps_count": 4,
+      "status": "completed",
+      "created_at": "2026-07-02T16:43:56.290218",
+      "total_latency_ms": 2873
+    },
+    {
+      "id": 2,
+      "task": "Onboard new employee",
+      "employee": "Sarah Chen",
+      "steps_count": 6,
+      "status": "completed",
+      "created_at": "2026-07-02T16:40:48.630269",
+      "total_latency_ms": 18704
+    },
+    {
+      "id": 1,
+      "task": "Onboard new employee",
+      "employee": "John Doe",
+      "steps_count": 4,
+      "status": "completed",
+      "created_at": "2026-07-02T16:33:46.250763",
+      "total_latency_ms": 13
+    }
+  ]
+}

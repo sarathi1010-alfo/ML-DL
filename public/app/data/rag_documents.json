@@ -1,0 +1,25 @@
+{
+  "documents": [
+    {
+      "id": 0,
+      "filename": "property_policy.txt",
+      "chunks": 4,
+      "size_kb": 0.37,
+      "uploaded_at": ""
+    },
+    {
+      "id": 0,
+      "filename": "hr_policy.txt",
+      "chunks": 8,
+      "size_kb": 0.65,
+      "uploaded_at": ""
+    },
+    {
+      "id": 1,
+      "filename": "alfo_ai_citizen_network.md",
+      "chunks": 18,
+      "size_kb": 33.45,
+      "uploaded_at": "2026-07-02T16:45:56.653244"
+    }
+  ]
+}

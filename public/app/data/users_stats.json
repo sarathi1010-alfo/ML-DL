@@ -1,0 +1,11 @@
+{
+  "total_predictions": 57,
+  "by_type": {
+    "bert": 9,
+    "churn": 22,
+    "damage": 13,
+    "forecast": 5,
+    "premium": 8
+  },
+  "last_active": "2026-07-02T23:08:24.688873"
+}

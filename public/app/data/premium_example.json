@@ -1,0 +1,32 @@
+{
+  "predicted_premium": 1138.38,
+  "currency": "USD",
+  "confidence_interval": [
+    1081.46,
+    1195.3
+  ],
+  "risk_factors": [
+    {
+      "factor": "Smoking",
+      "impact": 500.0,
+      "level": "High"
+    },
+    {
+      "factor": "Age",
+      "impact": 450.0,
+      "level": "High"
+    },
+    {
+      "factor": "BMI",
+      "impact": 142.5,
+      "level": "Medium"
+    },
+    {
+      "factor": "Region",
+      "impact": 60.0,
+      "level": "Low"
+    }
+  ],
+  "model": "XGBoost Regressor",
+  "latency_ms": 1
+}

@@ -1,0 +1,2074 @@
+{
+  "predictions": [
+    {
+      "id": 57,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 34,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.771,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.541,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 6
+      },
+      "created_at": "2026-07-02T23:08:24.688873",
+      "latency_ms": 6
+    },
+    {
+      "id": 56,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 34,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.771,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.541,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 6
+      },
+      "created_at": "2026-07-02T23:01:28.692379",
+      "latency_ms": 6
+    },
+    {
+      "id": 55,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 34,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.771,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.541,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 6
+      },
+      "created_at": "2026-07-02T18:16:21.770688",
+      "latency_ms": 6
+    },
+    {
+      "id": 54,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 34,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.771,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.541,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 4
+      },
+      "created_at": "2026-07-02T17:47:30.969798",
+      "latency_ms": 4
+    },
+    {
+      "id": 53,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 34,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.771,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.541,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 3
+      },
+      "created_at": "2026-07-02T17:36:04.642771",
+      "latency_ms": 3
+    },
+    {
+      "id": 52,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 38,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.787,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.574,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 8
+      },
+      "created_at": "2026-07-02T17:29:44.641468",
+      "latency_ms": 8
+    },
+    {
+      "id": 51,
+      "type": "bert",
+      "input": {
+        "text": "My internet has been down for 3 days and no one is helping me!"
+      },
+      "output": {
+        "category": "Network",
+        "confidence": 0.491,
+        "categories": [
+          {
+            "label": "Network",
+            "score": 0.491
+          },
+          {
+            "label": "Technical",
+            "score": 0.326
+          },
+          {
+            "label": "General",
+            "score": 0.116
+          },
+          {
+            "label": "Billing",
+            "score": 0.067
+          }
+        ],
+        "sentiment": {
+          "label": "Negative",
+          "score": 0.74
+        },
+        "urgency": "Medium",
+        "entities": [
+          {
+            "text": "internet",
+            "type": "ISSUE"
+          }
+        ],
+        "model": "BERT (TF-IDF + LogReg deployment proxy)",
+        "latency_ms": 2
+      },
+      "created_at": "2026-07-02T17:29:40.559890",
+      "latency_ms": 2
+    },
+    {
+      "id": 50,
+      "type": "damage",
+      "input": {
+        "filename": "images.jpeg",
+        "size": 51723
+      },
+      "output": {
+        "class": "Damaged",
+        "confidence": 0.99,
+        "severity": "Severe",
+        "damage_types": [
+          "scratch",
+          "dent",
+          "crack",
+          "glass",
+          "rust",
+          "paint_chip",
+          "hail",
+          "puncture"
+        ],
+        "estimated_repair_cost_usd": 52100.13,
+        "damage_regions": [
+          {
+            "x": 0.632,
+            "y": 0.473,
+            "w": 0.158,
+            "h": 0.158,
+            "type": "scratch",
+            "severity": "Severe",
+            "confidence": 0.99,
+            "area_percent": 2.49,
+            "part": "Hood"
+          },
+          {
+            "x": 0.632,
+            "y": 0.63,
+            "w": 0.158,
+            "h": 0.158,
+            "type": "scratch",
+            "severity": "Severe",
+            "confidence": 0.99,
+            "area_percent": 2.49,
+            "part": "Hood"
+          },
+          {
+            "x": 0.158,
+            "y": 0.473,
+            "w": 0.158,
+            "h": 0.158,
+            "type": "scratch",
+            "severity": "Severe",
+            "confidence": 0.99,
+            "area_percent": 2.49,
+            "part": "Hood"
+          },
+          {
+            "x": 0.474,
+            "y": 0.473,
+            "w": 0.158,
+            "h": 0.158,
+            "type": "scratch",
+            "severity": "Severe",
+            "confidence": 0.99,
+            "area_percent": 2.49,
+            "part": "Hood"
+          },
+          {
+            "x": 0.158,
+            "y": 0.158,
+            "w": 0.158,
+            "h": 0.158,
+            "type": "scratch",
+            "severity": "Severe",
+            "confidence": 0.99,
+            "area_percent": 2.49,
+            "part": "Roof"
+          },
+          {
+            "x": 0.316,
+            "y": 0.63,
+            "w": 0.158,
+            "h": 0.158,
+            "type": "scratch",
+            "severity": "Severe",
+            "confidence": 0.99,
+            "area_percent": 2.49,
+            "part": "Hood"
+          }
+        ],
+        "model": "ResNet50 (CV feature pipeline)",
+        "latency_ms": 93,
+        "severity_score": 100,
+        "damage_type_scores": {
+          "scratch": 1.0,
+          "dent": 1.0,
+          "crack": 0.909,
+          "glass": 1.0,
+          "rust": 1.0,
+          "paint_chip": 1.0,
+          "hail": 1.0,
+          "puncture": 1.0
+        },
+        "vehicle_region": {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 0.948,
+          "h": 0.949,
+          "confidence": 0.812
+        },
+        "detected_parts": [
+          {
+            "part": "Front Bumper",
+            "region": {
+              "x": 0.0,
+              "y": 0.74,
+              "w": 0.948,
+              "h": 0.209
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 1.0,
+              "crack": 0.75,
+              "glass": 0.28,
+              "rust": 1.0,
+              "paint_chip": 1.0,
+              "hail": 1.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Hood",
+            "region": {
+              "x": 0.0,
+              "y": 0.493,
+              "w": 0.948,
+              "h": 0.247
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 1.0,
+              "crack": 0.909,
+              "glass": 0.356,
+              "rust": 1.0,
+              "paint_chip": 1.0,
+              "hail": 1.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Windshield",
+            "region": {
+              "x": 0.047,
+              "y": 0.323,
+              "w": 0.853,
+              "h": 0.171
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "glass",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": true,
+            "is_glass": true,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 0.898,
+              "crack": 0.74,
+              "glass": 1.0,
+              "rust": 1.0,
+              "paint_chip": 1.0,
+              "hail": 0.5,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Roof",
+            "region": {
+              "x": 0.095,
+              "y": 0.152,
+              "w": 0.758,
+              "h": 0.171
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": true,
+            "is_glass": false,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 0.853,
+              "crack": 0.832,
+              "glass": 0.261,
+              "rust": 0.481,
+              "paint_chip": 1.0,
+              "hail": 1.0,
+              "puncture": 0.694
+            }
+          },
+          {
+            "part": "Rear Window",
+            "region": {
+              "x": 0.047,
+              "y": 0.152,
+              "w": 0.853,
+              "h": 0.152
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "glass",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": true,
+            "is_glass": true,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 0.873,
+              "crack": 0.833,
+              "glass": 0.549,
+              "rust": 0.87,
+              "paint_chip": 1.0,
+              "hail": 1.0,
+              "puncture": 0.785
+            }
+          },
+          {
+            "part": "Trunk Lid",
+            "region": {
+              "x": 0.0,
+              "y": 0.285,
+              "w": 0.948,
+              "h": 0.19
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 0.852,
+              "crack": 0.732,
+              "glass": 0.191,
+              "rust": 1.0,
+              "paint_chip": 1.0,
+              "hail": 0.375,
+              "puncture": 0.774
+            }
+          },
+          {
+            "part": "Left Door",
+            "region": {
+              "x": 0.0,
+              "y": 0.38,
+              "w": 0.171,
+              "h": 0.427
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 1.0,
+              "crack": 0.835,
+              "glass": 0.226,
+              "rust": 1.0,
+              "paint_chip": 0.467,
+              "hail": 0.625,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Right Door",
+            "region": {
+              "x": 0.777,
+              "y": 0.38,
+              "w": 0.171,
+              "h": 0.427
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 1.0,
+              "dent": 0.798,
+              "crack": 0.841,
+              "glass": 0.32,
+              "rust": 1.0,
+              "paint_chip": 1.0,
+              "hail": 0.625,
+              "puncture": 0.454
+            }
+          }
+        ],
+        "cost_breakdown": [
+          {
+            "part": "Windshield",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "glass",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 21.7,
+            "labor_cost": 2604.0,
+            "parts_cost": 3881.28,
+            "paint_cost": 922.49,
+            "total": 7407.77
+          },
+          {
+            "part": "Rear Window",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "glass",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 21.9,
+            "labor_cost": 2628.0,
+            "parts_cost": 3768.58,
+            "paint_cost": 905.16,
+            "total": 7301.74
+          },
+          {
+            "part": "Hood",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 20.9,
+            "labor_cost": 2508.0,
+            "parts_cost": 3476.14,
+            "paint_cost": 857.58,
+            "total": 6841.72
+          },
+          {
+            "part": "Front Bumper",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 20.6,
+            "labor_cost": 2472.0,
+            "parts_cost": 3410.0,
+            "paint_cost": 845.5,
+            "total": 6727.5
+          },
+          {
+            "part": "Left Door",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 19.7,
+            "labor_cost": 2364.0,
+            "parts_cost": 3268.19,
+            "paint_cost": 782.95,
+            "total": 6415.14
+          },
+          {
+            "part": "Roof",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 19.3,
+            "labor_cost": 2316.0,
+            "parts_cost": 3130.02,
+            "paint_cost": 777.86,
+            "total": 6223.88
+          },
+          {
+            "part": "Right Door",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "hail",
+              "puncture"
+            ],
+            "labor_hours": 18.6,
+            "labor_cost": 2232.0,
+            "parts_cost": 2985.74,
+            "paint_cost": 767.07,
+            "total": 5984.81
+          },
+          {
+            "part": "Trunk Lid",
+            "damage_types": [
+              "scratch",
+              "dent",
+              "crack",
+              "rust",
+              "paint_chip",
+              "puncture"
+            ],
+            "labor_hours": 15.4,
+            "labor_cost": 1848.0,
+            "parts_cost": 2657.36,
+            "paint_cost": 692.21,
+            "total": 5197.57
+          }
+        ],
+        "total_labor_hours": 158.1,
+        "image_quality": {
+          "score": 0.9,
+          "brightness": 0.438,
+          "contrast": 0.537,
+          "blur": 0.0,
+          "resolution": "adequate",
+          "issues": []
+        },
+        "color_analysis": {
+          "dominant_colors": [
+            {
+              "hex": "#000000",
+              "name": "black",
+              "percent": 11.7
+            },
+            {
+              "hex": "#202020",
+              "name": "charcoal",
+              "percent": 5.8
+            },
+            {
+              "hex": "#404040",
+              "name": "gray",
+              "percent": 4.9
+            },
+            {
+              "hex": "#606080",
+              "name": "gray",
+              "percent": 4.9
+            }
+          ],
+          "vehicle_color_estimate": "gray"
+        },
+        "risk_assessment": {
+          "structural_risk": "High",
+          "cosmetic_risk": "High",
+          "safety_concerns": [
+            "Windshield damage may impair visibility",
+            "Rear Window damage may impair visibility",
+            "Structural crack detected \u2014 inspect before driving"
+          ],
+          "drivable": false
+        },
+        "recommendations": [
+          "Schedule a body-shop assessment within 7 days.",
+          "Dents may qualify for PDR (paintless dent repair) if the paint is intact \u2014 request a PDR quote first.",
+          "Seal scratches with touch-up paint to prevent corrosion.",
+          "Treat rust spots promptly to stop corrosion spread; sand and prime before repainting.",
+          "Have glass damage assessed by an auto-glass specialist \u2014 small chips can often be filled.",
+          "Structural cracks should be inspected by a certified technician before further driving.",
+          "Vehicle is NOT recommended for driving until structural repairs are completed.",
+          "Estimated repair exceeds $2,500 \u2014 consider filing an insurance claim."
+        ],
+        "analysis_summary": "Severe damage detected on Front Bumper (scratch+dent+crack+rust+paint_chip+hail+puncture), Hood (scratch+dent+crack+rust+paint_chip+hail+puncture), Windshield (scratch+dent+crack+glass+rust+paint_chip+hail+puncture) and 5 more area(s). Estimated 158.1 labor hours and $52,100 total repair cost. The vehicle is NOT recommended for driving until repaired. Recommend body-shop assessment within 7 days.",
+        "pipeline_stages": [
+          "preprocess",
+          "vehicle_detection",
+          "part_segmentation",
+          "damage_detection",
+          "region_localization",
+          "severity_scoring",
+          "cost_estimation",
+          "risk_assessment"
+        ],
+        "pipeline_stage_count": 8
+      },
+      "created_at": "2026-07-02T17:29:15.378113",
+      "latency_ms": 93
+    },
+    {
+      "id": 49,
+      "type": "damage",
+      "input": {
+        "filename": "d.png",
+        "size": 195
+      },
+      "output": {
+        "class": "Damaged",
+        "confidence": 0.99,
+        "severity": "Severe",
+        "damage_types": [
+          "dent",
+          "puncture"
+        ],
+        "estimated_repair_cost_usd": 20168.0,
+        "damage_regions": [],
+        "model": "ResNet50 (CV feature pipeline)",
+        "latency_ms": 80,
+        "severity_score": 84,
+        "damage_type_scores": {
+          "scratch": 0.0,
+          "dent": 1.0,
+          "crack": 0.0,
+          "glass": 0.0,
+          "rust": 0.0,
+          "paint_chip": 0.0,
+          "hail": 0.0,
+          "puncture": 1.0
+        },
+        "vehicle_region": {
+          "x": 0.0,
+          "y": 0.0,
+          "w": 0.95,
+          "h": 0.95,
+          "confidence": 0.5
+        },
+        "detected_parts": [
+          {
+            "part": "Front Bumper",
+            "region": {
+              "x": 0.0,
+              "y": 0.741,
+              "w": 0.95,
+              "h": 0.209
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Hood",
+            "region": {
+              "x": 0.0,
+              "y": 0.494,
+              "w": 0.95,
+              "h": 0.247
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Windshield",
+            "region": {
+              "x": 0.048,
+              "y": 0.323,
+              "w": 0.855,
+              "h": 0.171
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": true,
+            "is_glass": true,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Roof",
+            "region": {
+              "x": 0.095,
+              "y": 0.152,
+              "w": 0.76,
+              "h": 0.171
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": true,
+            "is_glass": false,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Rear Window",
+            "region": {
+              "x": 0.048,
+              "y": 0.152,
+              "w": 0.855,
+              "h": 0.152
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": true,
+            "is_glass": true,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Trunk Lid",
+            "region": {
+              "x": 0.0,
+              "y": 0.285,
+              "w": 0.95,
+              "h": 0.19
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Left Door",
+            "region": {
+              "x": 0.0,
+              "y": 0.38,
+              "w": 0.171,
+              "h": 0.427
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          },
+          {
+            "part": "Right Door",
+            "region": {
+              "x": 0.779,
+              "y": 0.38,
+              "w": 0.171,
+              "h": 0.427
+            },
+            "damage_detected": true,
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "severity": "Severe",
+            "condition": "damaged",
+            "structural": false,
+            "is_glass": false,
+            "scores": {
+              "scratch": 0.0,
+              "dent": 1.0,
+              "crack": -0.6,
+              "glass": 0.0,
+              "rust": 0.0,
+              "paint_chip": 0.033,
+              "hail": 0.0,
+              "puncture": 1.0
+            }
+          }
+        ],
+        "cost_breakdown": [
+          {
+            "part": "Front Bumper",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Hood",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Windshield",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Roof",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Rear Window",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Trunk Lid",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Left Door",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          },
+          {
+            "part": "Right Door",
+            "damage_types": [
+              "dent",
+              "puncture"
+            ],
+            "labor_hours": 7.4,
+            "labor_cost": 888.0,
+            "parts_cost": 1386.0,
+            "paint_cost": 247.0,
+            "total": 2521.0
+          }
+        ],
+        "total_labor_hours": 59.2,
+        "image_quality": {
+          "score": 0.0,
+          "brightness": 0.0,
+          "contrast": 0.0,
+          "blur": 1.0,
+          "resolution": "marginal",
+          "issues": [
+            "underexposed",
+            "low_contrast",
+            "blurry"
+          ]
+        },
+        "color_analysis": {
+          "dominant_colors": [
+            {
+              "hex": "#000000",
+              "name": "black",
+              "percent": 100.0
+            }
+          ],
+          "vehicle_color_estimate": "black"
+        },
+        "risk_assessment": {
+          "structural_risk": "High",
+          "cosmetic_risk": "High",
+          "safety_concerns": [
+            "Windshield damage may impair visibility",
+            "Rear Window damage may impair visibility"
+          ],
+          "drivable": false
+        },
+        "recommendations": [
+          "Schedule a body-shop assessment within 7 days.",
+          "Dents may qualify for PDR (paintless dent repair) if the paint is intact \u2014 request a PDR quote first.",
+          "Vehicle is NOT recommended for driving until structural repairs are completed.",
+          "Estimated repair exceeds $2,500 \u2014 consider filing an insurance claim."
+        ],
+        "analysis_summary": "Severe damage detected on Front Bumper (dent+puncture), Hood (dent+puncture), Windshield (dent+puncture) and 5 more area(s). Estimated 59.2 labor hours and $20,168 total repair cost. The vehicle is NOT recommended for driving until repaired. Recommend body-shop assessment within 7 days.",
+        "pipeline_stages": [
+          "preprocess",
+          "vehicle_detection",
+          "part_segmentation",
+          "damage_detection",
+          "region_localization",
+          "severity_scoring",
+          "cost_estimation",
+          "risk_assessment"
+        ],
+        "pipeline_stage_count": 8
+      },
+      "created_at": "2026-07-02T17:27:21.167349",
+      "latency_ms": 80
+    },
+    {
+      "id": 48,
+      "type": "bert",
+      "input": {
+        "text": "My internet is not working"
+      },
+      "output": {
+        "category": "Technical",
+        "confidence": 0.787,
+        "categories": [
+          {
+            "label": "Technical",
+            "score": 0.787
+          },
+          {
+            "label": "Network",
+            "score": 0.135
+          },
+          {
+            "label": "Billing",
+            "score": 0.042
+          },
+          {
+            "label": "General",
+            "score": 0.035
+          }
+        ],
+        "sentiment": {
+          "label": "Negative",
+          "score": 0.62
+        },
+        "urgency": "Low",
+        "entities": [
+          {
+            "text": "internet",
+            "type": "ISSUE"
+          }
+        ],
+        "model": "BERT (TF-IDF + LogReg deployment proxy)",
+        "latency_ms": 1
+      },
+      "created_at": "2026-07-02T17:27:16.378401",
+      "latency_ms": 1
+    },
+    {
+      "id": 47,
+      "type": "forecast",
+      "input": {
+        "horizon": 14,
+        "history": null
+      },
+      "output": {
+        "forecast": [
+          {
+            "day": 1,
+            "value": 116.6,
+            "lower": 106.57,
+            "upper": 126.64
+          },
+          {
+            "day": 2,
+            "value": 113.22,
+            "lower": 103.19,
+            "upper": 123.26
+          },
+          {
+            "day": 3,
+            "value": 108.15,
+            "lower": 98.12,
+            "upper": 118.19
+          },
+          {
+            "day": 4,
+            "value": 112.6,
+            "lower": 102.57,
+            "upper": 122.64
+          },
+          {
+            "day": 5,
+            "value": 114.83,
+            "lower": 104.8,
+            "upper": 124.87
+          },
+          {
+            "day": 6,
+            "value": 114.17,
+            "lower": 104.13,
+            "upper": 124.2
+          },
+          {
+            "day": 7,
+            "value": 110.54,
+            "lower": 100.51,
+            "upper": 120.58
+          },
+          {
+            "day": 8,
+            "value": 105.72,
+            "lower": 95.68,
+            "upper": 115.75
+          },
+          {
+            "day": 9,
+            "value": 104.01,
+            "lower": 93.97,
+            "upper": 114.04
+          },
+          {
+            "day": 10,
+            "value": 105.36,
+            "lower": 95.33,
+            "upper": 115.4
+          },
+          {
+            "day": 11,
+            "value": 109.84,
+            "lower": 99.8,
+            "upper": 119.87
+          },
+          {
+            "day": 12,
+            "value": 114.43,
+            "lower": 104.39,
+            "upper": 124.46
+          },
+          {
+            "day": 13,
+            "value": 114.64,
+            "lower": 104.61,
+            "upper": 124.68
+          },
+          {
+            "day": 14,
+            "value": 114.31,
+            "lower": 104.27,
+            "upper": 124.34
+          }
+        ],
+        "metrics": {
+          "mae": 4.684,
+          "rmse": 5.78,
+          "r2": 0.538
+        },
+        "model": "Attention-LSTM (lag features + LightGBM)",
+        "latency_ms": 48
+      },
+      "created_at": "2026-07-02T17:27:16.369758",
+      "latency_ms": 48
+    },
+    {
+      "id": 46,
+      "type": "premium",
+      "input": {
+        "age": 45,
+        "bmi": 28.5,
+        "smoker": true,
+        "region": 2
+      },
+      "output": {
+        "predicted_premium": 1138.38,
+        "currency": "USD",
+        "confidence_interval": [
+          1081.46,
+          1195.3
+        ],
+        "risk_factors": [
+          {
+            "factor": "Smoking",
+            "impact": 500.0,
+            "level": "High"
+          },
+          {
+            "factor": "Age",
+            "impact": 450.0,
+            "level": "High"
+          },
+          {
+            "factor": "BMI",
+            "impact": 142.5,
+            "level": "Medium"
+          },
+          {
+            "factor": "Region",
+            "impact": 60.0,
+            "level": "Low"
+          }
+        ],
+        "model": "XGBoost Regressor",
+        "latency_ms": 1
+      },
+      "created_at": "2026-07-02T17:27:16.312347",
+      "latency_ms": 1
+    },
+    {
+      "id": 45,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 34,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.771,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.541,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 3
+      },
+      "created_at": "2026-07-02T17:27:16.305240",
+      "latency_ms": 3
+    },
+    {
+      "id": 44,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 38,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.787,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.574,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 8
+      },
+      "created_at": "2026-07-02T17:22:36.890475",
+      "latency_ms": 8
+    },
+    {
+      "id": 43,
+      "type": "churn",
+      "input": {
+        "gender": "Male",
+        "age": 38,
+        "contract": "Month-to-month",
+        "tenure": 12,
+        "monthly_charges": 75.5
+      },
+      "output": {
+        "churn_probability": 0.787,
+        "prediction": "Churn Risk",
+        "risk_level": "High",
+        "confidence": 0.574,
+        "feature_contributions": [
+          {
+            "feature": "Gender",
+            "contribution": 0.2124,
+            "direction": "decreases churn"
+          },
+          {
+            "feature": "Age",
+            "contribution": 0.1438,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Contract",
+            "contribution": 0.24,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "Tenure",
+            "contribution": 0.225,
+            "direction": "increases churn"
+          },
+          {
+            "feature": "MonthlyCharges",
+            "contribution": 0.1788,
+            "direction": "increases churn"
+          }
+        ],
+        "model": "XGBoost",
+        "latency_ms": 8
+      },
+      "created_at": "2026-07-02T17:21:23.895633",
+      "latency_ms": 8
+    },
+    {
+      "id": 42,
+      "type": "forecast",
+      "input": {
+        "horizon": 30,
+        "history": null
+      },
+      "output": {
+        "forecast": [
+          {
+            "day": 1,
+            "value": 116.6,
+            "lower": 106.57,
+            "upper": 126.64
+          },
+          {
+            "day": 2,
+            "value": 113.22,
+            "lower": 103.19,
+            "upper": 123.26
+          },
+          {
+            "day": 3,
+            "value": 108.15,
+            "lower": 98.12,
+            "upper": 118.19
+          },
+          {
+            "day": 4,
+            "value": 112.6,
+            "lower": 102.57,
+            "upper": 122.64
+          },
+          {
+            "day": 5,
+            "value": 114.83,
+            "lower": 104.8,
+            "upper": 124.87
+          },
+          {
+            "day": 6,
+            "value": 114.17,
+            "lower": 104.13,
+            "upper": 124.2
+          },
+          {
+            "day": 7,
+            "value": 110.54,
+            "lower": 100.51,
+            "upper": 120.58
+          },
+          {
+            "day": 8,
+            "value": 105.72,
+            "lower": 95.68,
+            "upper": 115.75
+          },
+          {
+            "day": 9,
+            "value": 104.01,
+            "lower": 93.97,
+            "upper": 114.04
+          },
+          {
+            "day": 10,
+            "value": 105.36,
+            "lower": 95.33,
+            "upper": 115.4
+          },
+          {
+            "day": 11,
+            "value": 109.84,
+            "lower": 99.8,
+            "upper": 119.87
+          },
+          {
+            "day": 12,
+            "value": 114.43,
+            "lower": 104.39,
+            "upper": 124.46
+          },
+          {
+            "day": 13,
+            "value": 114.64,
+            "lower": 104.61,
+            "upper": 124.68
+          },
+          {
+            "day": 14,
+            "value": 114.31,
+            "lower": 104.27,
+            "upper": 124.34
+          },
+          {
+            "day": 15,
+            "value": 109.78,
+            "lower": 99.74,
+            "upper": 119.81
+          },
+          {
+            "day": 16,
+            "value": 112.67,
+            "lower": 102.63,
+            "upper": 122.7
+          },
+          {
+            "day": 17,
+            "value": 116.95,
+            "lower": 106.92,
+            "upper": 126.99
+          },
+          {
+            "day": 18,
+            "value": 123.09,
+            "lower": 113.05,
+            "upper": 133.12
+          },
+          {
+            "day": 19,
+            "value": 124.78,
+            "lower": 114.74,
+            "upper": 134.81
+          },
+          {
+            "day": 20,
+            "value": 131.14,
+            "lower": 121.1,
+            "upper": 141.17
+          },
+          {
+            "day": 21,
+            "value": 126.05,
+            "lower": 116.01,
+            "upper": 136.09
+          },
+          {
+            "day": 22,
+            "value": 125.77,
+            "lower": 115.74,
+            "upper": 135.81
+          },
+          {
+            "day": 23,
+            "value": 125.97,
+            "lower": 115.93,
+            "upper": 136.0
+          },
+          {
+            "day": 24,
+            "value": 126.26,
+            "lower": 116.22,
+            "upper": 136.29
+          },
+          {
+            "day": 25,
+            "value": 126.91,
+            "lower": 116.87,
+            "upper": 136.94
+          },
+          {
+            "day": 26,
+            "value": 127.8,
+            "lower": 117.77,
+            "upper": 137.84
+          },
+          {
+            "day": 27,
+            "value": 126.94,
+            "lower": 116.91,
+            "upper": 136.98
+          },
+          {
+            "day": 28,
+            "value": 121.56,
+            "lower": 111.52,
+            "upper": 131.59
+          },
+          {
+            "day": 29,
+            "value": 119.44,
+            "lower": 109.41,
+            "upper": 129.48
+          },
+          {
+            "day": 30,
+            "value": 116.73,
+            "lower": 106.7,
+            "upper": 126.77
+          }
+        ],
+        "metrics": {
+          "mae": 4.684,
+          "rmse": 5.78,
+          "r2": 0.538
+        },
+        "model": "Attention-LSTM (lag features + LightGBM)",
+        "latency_ms": 154
+      },
+      "created_at": "2026-07-02T17:21:04.432329",
+      "latency_ms": 154
+    },
+    {
+      "id": 41,
+      "type": "forecast",
+      "input": {
+        "horizon": 7,
+        "history": null
+      },
+      "output": {
+        "forecast": [
+          {
+            "day": 1,
+            "value": 116.6,
+            "lower": 106.57,
+            "upper": 126.64
+          },
+          {
+            "day": 2,
+            "value": 113.22,
+            "lower": 103.19,
+            "upper": 123.26
+          },
+          {
+            "day": 3,
+            "value": 108.15,
+            "lower": 98.12,
+            "upper": 118.19
+          },
+          {
+            "day": 4,
+            "value": 112.6,
+            "lower": 102.57,
+            "upper": 122.64
+          },
+          {
+            "day": 5,
+            "value": 114.83,
+            "lower": 104.8,
+            "upper": 124.87
+          },
+          {
+            "day": 6,
+            "value": 114.17,
+            "lower": 104.13,
+            "upper": 124.2
+          },
+          {
+            "day": 7,
+            "value": 110.54,
+            "lower": 100.51,
+            "upper": 120.58
+          }
+        ],
+        "metrics": {
+          "mae": 4.684,
+          "rmse": 5.78,
+          "r2": 0.538
+        },
+        "model": "Attention-LSTM (lag features + LightGBM)",
+        "latency_ms": 34
+      },
+      "created_at": "2026-07-02T17:21:04.268029",
+      "latency_ms": 34
+    },
+    {
+      "id": 40,
+      "type": "bert",
+      "input": {
+        "text": "I was overcharged on my bill and want a refund"
+      },
+      "output": {
+        "category": "Billing",
+        "confidence": 0.972,
+        "categories": [
+          {
+            "label": "Billing",
+            "score": 0.972
+          },
+          {
+            "label": "General",
+            "score": 0.016
+          },
+          {
+            "label": "Technical",
+            "score": 0.006
+          },
+          {
+            "label": "Network",
+            "score": 0.005
+          }
+        ],
+        "sentiment": {
+          "label": "Neutral",
+          "score": 0.5
+        },
+        "urgency": "Low",
+        "entities": [
+          {
+            "text": "refund",
+            "type": "ISSUE"
+          }
+        ],
+        "model": "BERT (TF-IDF + LogReg deployment proxy)",
+        "latency_ms": 1
+      },
+      "created_at": "2026-07-02T17:21:04.222398",
+      "latency_ms": 1
+    },
+    {
+      "id": 39,
+      "type": "bert",
+      "input": {
+        "text": "My internet is down and the router is broken"
+      },
+      "output": {
+        "category": "Network",
+        "confidence": 0.589,
+        "categories": [
+          {
+            "label": "Network",
+            "score": 0.589
+          },
+          {
+            "label": "Technical",
+            "score": 0.373
+          },
+          {
+            "label": "Billing",
+            "score": 0.021
+          },
+          {
+            "label": "General",
+            "score": 0.016
+          }
+        ],
+        "sentiment": {
+          "label": "Negative",
+          "score": 0.74
+        },
+        "urgency": "Medium",
+        "entities": [
+          {
+            "text": "internet",
+            "type": "ISSUE"
+          },
+          {
+            "text": "router",
+            "type": "ISSUE"
+          }
+        ],
+        "model": "BERT (TF-IDF + LogReg deployment proxy)",
+        "latency_ms": 2
+      },
+      "created_at": "2026-07-02T17:21:04.210941",
+      "latency_ms": 2
+    },
+    {
+      "id": 38,
+      "type": "premium",
+      "input": {
+        "age": 40,
+        "bmi": 27.0,
+        "smoker": false,
+        "region": 1
+      },
+      "output": {
+        "predicted_premium": 574.14,
+        "currency": "USD",
+        "confidence_interval": [
+          545.44,
+          602.85
+        ],
+        "risk_factors": [
+          {
+            "factor": "Smoking",
+            "impact": 0.0,
+            "level": "Low"
+          },
+          {
+            "factor": "Age",
+            "impact": 400.0,
+            "level": "High"
+          },
+          {
+            "factor": "BMI",
+            "impact": 135.0,
+            "level": "Medium"
+          },
+          {
+            "factor": "Region",
+            "impact": 30.0,
+            "level": "Low"
+          }
+        ],
+        "model": "XGBoost Regressor",
+        "latency_ms": 1
+      },
+      "created_at": "2026-07-02T17:21:04.199489",
+      "latency_ms": 1
+    }
+  ]
+}

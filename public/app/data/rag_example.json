@@ -1,0 +1,26 @@
+{
+  "answer": "The termination notice period depends on employment status: during the 90-day probation period, either party must provide 14 days notice, while standard termination requires 30 days written notice.",
+  "sources": [
+    {
+      "document": "property_policy.txt",
+      "chunk_index": 0,
+      "text": "Standard termination requires 30-day written notice from either the employer or the employee.",
+      "score": 0.7561
+    },
+    {
+      "document": "hr_policy.txt",
+      "chunk_index": 0,
+      "text": "Probation period is 90 days, during which either party may terminate employment with 14-day notice.",
+      "score": 0.7146
+    },
+    {
+      "document": "hr_policy.txt",
+      "chunk_index": 0,
+      "text": "New employees must complete onboarding within the first 5 business days, including IT setup and policy acknowledgment.",
+      "score": 0.0
+    }
+  ],
+  "retrieval_confidence": 0.7561,
+  "chunks_used": 3,
+  "latency_ms": 648
+}
