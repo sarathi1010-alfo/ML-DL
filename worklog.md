@@ -265,3 +265,28 @@ Work Log:
 Stage Summary:
 - Frontend confirmed 100% pure HTML5/CSS3/Vanilla JS (no frameworks, no CDNs).
 - Damage detection upgraded from a basic binary classifier to a comprehensive 8-stage, part-level, multi-damage-type analysis pipeline with rich structured output and a detailed interactive UI.
+
+---
+Task ID: 9 (user follow-up: real outputs + churn gauge arc bug)
+Agent: orchestrator (main)
+Task: (1) Ensure everything is real / not static. (2) Fix the churn gauge arc not filling.
+
+Work Log:
+- (2) GAUGE BUG FIX: Root cause — gaugeChart drew a 234° arc (start=153°, end=387°) with center at cy=h*0.78, so the bottom of the arc (cy+r) extended below the 200px canvas and got clipped, making both the track and value fill look broken/incomplete. Rewrote as a clean 180° semicircle: start=π, end=2π (top half), center cy=r+8 (fits in canvas), added tick marks at 0/25/50/75/100%, value text placed inside the bowl. VLM-verified: "clean complete semicircle (half-ring) with the colored arc filling part of it, percentage shown inside, no clipping or incomplete arc."
+- (1) REAL-OUTPUT AUDIT: Verified every module produces genuinely computed, input-dependent output:
+    * Churn: cust1 prob=0.690 (Medium) vs cust2 prob=0.031 (Low) — REAL ✓
+    * Premium: smoker $1077 vs non-smoker $574 — REAL ✓
+    * BERT: "internet down"→Network vs "overcharged bill"→Billing — REAL ✓
+    * Forecast: 7 pts vs 30 pts (scales with horizon) — REAL ✓
+    * RAG: "termination"→30-day notice vs "PTO"→20 days/year (real retrieval+LLM) — REAL ✓
+    * SLM: different prompts→different responses (real LLM) — REAL ✓
+    * Metrics: 31 live requests, 7 models, 10 endpoints, live time-series — REAL ✓
+- Removed STATIC dashboard deltas (hardcoded delta:12/0.4/-8 and U.fakeSeries). Now computes real trends from the live time_series: splits into recent/prior halves, computes % change for requests, success-rate, and latency. Verified deltas change with live data (9 reqs/▼20% → 13 reqs/▲60%).
+- Enhanced SLM service (backend/app/services/slm_service.py): replaced hardcoded 1840ms default + static device with LIVE metrics — total_inferences, total_tokens_generated, avg/peak latency, avg tokens/sec, real process RSS memory (psutil), real CPU%, real hostname/cpu/cores (platform module), uptime. Status reflects LLM backend connectivity. Schema updated with all new fields.
+- Rewrote SLM frontend view to display all live metrics: identity card, 8-tile runtime metrics grid, resource bars (memory/CPU), real edge-device card, refresh button, and auto-refresh after each inference. Added U.fmtDuration helper.
+- Fixed hint threshold (series.length>=2 for "vs prior period") to match delta computation.
+
+Stage Summary:
+- Churn gauge now renders as a clean, complete 180° semicircle (VLM-verified).
+- ALL platform outputs are genuinely computed (audit passes for all 8 modules). No static/fake data remains in the dashboard cards or SLM panel.
+- SLM panel now shows real runtime metrics (memory, CPU, call counts, latency, tokens) that update live after each inference.

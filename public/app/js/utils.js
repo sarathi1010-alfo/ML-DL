@@ -162,6 +162,14 @@
     if (kb < 1024) return Math.round(kb) + ' KB';
     return (kb / 1024).toFixed(2) + ' MB';
   };
+  U.fmtDuration = (sec) => {
+    if (sec == null) return '—';
+    sec = Number(sec);
+    if (sec < 60) return Math.round(sec) + 's';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ' + Math.round(sec % 60) + 's';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'h ' + Math.floor((sec % 3600) / 60) + 'm';
+    return Math.floor(sec / 86400) + 'd ' + Math.floor((sec % 86400) / 3600) + 'h';
+  };
   U.fmtRelTime = (iso) => {
     if (!iso) return '—';
     const d = new Date(iso);

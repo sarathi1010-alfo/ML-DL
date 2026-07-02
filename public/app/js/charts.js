@@ -382,11 +382,13 @@
   function gaugeChart(canvas, value, opts = {}) {
     const { ctx, w, h } = setup(canvas);
     const p = palette();
-    const cx = w / 2, cy = h * 0.78;
-    const r = Math.min(w / 2 - 16, h - 20);
-    const start = Math.PI * 0.85; // 153deg
-    const end = Math.PI * 2.15;   // 387deg (27deg past 360)
-    const arc = end - start;
+    // Clean 180° semicircle gauge: arc spans the top half (left → over top → right).
+    const cx = w / 2;
+    const r = Math.max(8, Math.min(w / 2 - 18, h - 24));
+    const cy = r + 8;                       // center near the top so the semicircle fits
+    const start = Math.PI;                  // 180° (left)
+    const end = 2 * Math.PI;                // 360° (right)  → top half
+    const arc = end - start;                // 180°
     const v = Math.max(0, Math.min(1, value));
 
     let color = p.primary;
@@ -396,31 +398,45 @@
       else color = opts.colors?.low || p.primary;
     }
 
-    // background track
+    // background track (full semicircle)
     ctx.beginPath();
     ctx.arc(cx, cy, r, start, end);
     ctx.strokeStyle = cssVar('--surface-3', '#1c2438');
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 16;
     ctx.lineCap = 'round';
     ctx.stroke();
 
-    // value arc
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, start, start + arc * v);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 14;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+    // value arc (fills proportionally from the left)
+    if (v > 0.001) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, start, start + arc * v);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 16;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
 
-    // center value
+    // tick marks at 0%, 50%, 100%
+    ctx.strokeStyle = cssVar('--border', '#2a3550');
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const a = start + (arc * i) / 4;
+      const x1 = cx + Math.cos(a) * (r - 10);
+      const y1 = cy + Math.sin(a) * (r - 10);
+      const x2 = cx + Math.cos(a) * (r + 10);
+      const y2 = cy + Math.sin(a) * (r + 10);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    }
+
+    // center value (placed below the arc, inside the semicircle bowl)
     ctx.fillStyle = p.text;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = '700 28px ' + cssVar('--font-mono', 'monospace');
-    ctx.fillText(opts.label || (v * 100).toFixed(0) + '%', cx, cy - 8);
+    ctx.font = '700 30px ' + cssVar('--font-mono', 'monospace');
+    ctx.fillText(opts.label || (v * 100).toFixed(0) + '%', cx, cy + r * 0.42);
     if (opts.sub) {
       ctx.fillStyle = p.muted;
-      ctx.font = '10px ' + cssVar('--font-sans', 'sans-serif');
-      ctx.fillText(opts.sub, cx, cy + 14);
+      ctx.font = '11px ' + cssVar('--font-sans', 'sans-serif');
+      ctx.fillText(opts.sub, cx, cy + r * 0.42 + 22);
     }
   }
 

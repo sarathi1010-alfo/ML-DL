@@ -59,32 +59,74 @@
       const api = metrics.api_usage || {};
       const lat = metrics.latency || {};
       const series = (metrics.time_series || []).slice(-24);
+
+      // --- Real trend computation from the live time series ---
+      // Split the series into a recent half and a prior half; compare sums/avgs.
+      function splitTrend(arr) {
+        const n = arr.length;
+        if (n < 2) return { recent: arr, prior: [] };
+        const mid = Math.floor(n / 2);
+        return { recent: arr.slice(mid), prior: arr.slice(0, mid) };
+      }
+      function pctDelta(recentSum, priorSum) {
+        if (priorSum === 0) return recentSum > 0 ? 100 : 0;
+        return Math.round(((recentSum - priorSum) / priorSum) * 100);
+      }
+      function avg(arr, key) {
+        if (!arr.length) return 0;
+        return arr.reduce((a, b) => a + (b[key] || 0), 0) / arr.length;
+      }
+      const tReq = splitTrend(series);
+      const reqRecent = tReq.recent.reduce((a, b) => a + (b.requests || 0), 0);
+      const reqPrior = tReq.prior.reduce((a, b) => a + (b.requests || 0), 0);
+      const reqDelta = pctDelta(reqRecent, reqPrior);
+      const reqDeltaDir = reqRecent >= reqPrior ? 'up' : 'down';
+
+      // Success-rate trend: compare error rates of recent vs prior halves
+      const errRecent = tReq.recent.reduce((a, b) => a + (b.errors || 0), 0);
+      const errPrior = tReq.prior.reduce((a, b) => a + (b.errors || 0), 0);
+      const srRecent = reqRecent > 0 ? (1 - errRecent / reqRecent) * 100 : 100;
+      const srPrior = reqPrior > 0 ? (1 - errPrior / reqPrior) * 100 : 100;
+      const srDelta = Math.round((srRecent - srPrior) * 10) / 10;
+      const srDeltaDir = srRecent >= srPrior ? 'up' : 'down';
+
+      // Latency trend: compare recent avg vs prior avg
+      const latRecent = avg(tReq.recent, 'latency_ms');
+      const latPrior = avg(tReq.prior, 'latency_ms');
+      const latDelta = latPrior > 0 ? Math.round(((latRecent - latPrior) / latPrior) * 100) : 0;
+      const latDeltaDir = latRecent <= latPrior ? 'up' : 'down'; // lower latency = "up" (good)
+
       const totalReqs = api.total_requests || 0;
       const successRate = api.success_rate || 0;
       const avgLat = lat.p50_ms || 0;
       const modelCount = (metrics.model_metrics || []).length;
+      const mm = metrics.model_metrics || [];
+      const healthyModels = mm.filter(m => (m.status || 'healthy') === 'healthy').length;
 
       statsRow.appendChild(C.statCard({
         label: 'Total Predictions', value: U.fmtNumber(totalReqs),
-        delta: 12, deltaDir: 'up', hint: 'last 24h',
+        delta: Math.abs(reqDelta), deltaDir: reqDeltaDir,
+        hint: series.length >= 2 ? 'vs prior period' : 'last 24h',
         spark: series.map(s => s.requests || 0),
         sparkColor: Charts.palette().primary
       }));
       statsRow.appendChild(C.statCard({
         label: 'Active Models', value: U.fmtNumber(modelCount),
-        hint: 'all deployed',
-        spark: U.fakeSeries(12, 4, 8),
+        hint: healthyModels + '/' + modelCount + ' healthy',
+        spark: mm.map(m => m.calls || 0),
         sparkColor: Charts.palette().accent
       }));
       statsRow.appendChild(C.statCard({
         label: 'API Success Rate', value: U.fmtPct(successRate, 2),
-        delta: 0.4, deltaDir: 'up',
-        spark: series.map(s => 100 - (s.errors || 0) * 5),
+        delta: Math.abs(srDelta), deltaDir: srDeltaDir,
+        hint: series.length >= 2 ? 'vs prior period' : 'current',
+        spark: series.map(s => 100 - (s.errors || 0)),
         sparkColor: Charts.palette().primary
       }));
       statsRow.appendChild(C.statCard({
         label: 'Avg Latency (p50)', value: U.fmtMs(avgLat),
-        delta: -8, deltaDir: 'down', hint: 'vs last week',
+        delta: Math.abs(latDelta), deltaDir: latDeltaDir,
+        hint: series.length >= 2 ? 'vs prior period' : 'current',
         spark: series.map(s => s.latency_ms || 0),
         sparkColor: Charts.palette().warning
       }));
