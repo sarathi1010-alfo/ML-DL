@@ -134,8 +134,60 @@ const server = Bun.serve({
       return handleChat(req);
     }
 
+    // ── API proxy: forward /api/v1/* to the FastAPI backend on localhost:8000 ──
+    // The public gateway can reach this service (port 3003) but NOT FastAPI
+    // (port 8000) directly. So all frontend API calls are routed through here.
+    if (url.pathname.startsWith('/api/')) {
+      return proxyToBackend(req, url);
+    }
+
     return json({ error: 'Not found', path: url.pathname }, 404);
   },
 });
 
-console.log(`[llm-service] listening on http://localhost:${PORT}`);
+// ── Proxy /api/* to FastAPI at http://localhost:8000 ──
+const BACKEND = 'http://localhost:8000';
+
+async function proxyToBackend(req: Request, url: URL): Promise<Response> {
+  // Strip the gateway-only XTransformPort query param
+  const sp = new URLSearchParams(url.searchParams);
+  sp.delete('XTransformPort');
+  const qs = sp.toString();
+  const target = `${BACKEND}${url.pathname}${qs ? '?' + qs : ''}`;
+
+  // Forward headers except host/connection/content-length (fetch sets its own)
+  const headers = new Headers();
+  req.headers.forEach((v, k) => {
+    const lk = k.toLowerCase();
+    if (lk === 'host' || lk === 'connection' || lk === 'content-length') return;
+    headers.set(k, v);
+  });
+
+  const init: RequestInit = { method: req.method, headers };
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    init.body = req.body;
+    // @ts-expect-error duplex is required for streaming bodies in undici/Bun
+    init.duplex = 'half';
+  }
+
+  try {
+    const upstream = await fetch(target, init);
+    const respHeaders = new Headers();
+    upstream.headers.forEach((v, k) => {
+      const lk = k.toLowerCase();
+      if (lk === 'content-encoding' || lk === 'content-length' || lk === 'transfer-encoding') return;
+      respHeaders.set(k, v);
+    });
+    // CORS for browser
+    respHeaders.set('Access-Control-Allow-Origin', '*');
+    return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return json(
+      { detail: `Backend unreachable: ${msg}`, error_code: 'PROXY_ERROR', status_code: 502 },
+      502
+    );
+  }
+}
+
+console.log(`[llm-service] listening on http://localhost:${PORT} (proxying /api/* → ${BACKEND})`);

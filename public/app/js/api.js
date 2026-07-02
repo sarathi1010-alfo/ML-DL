@@ -11,9 +11,12 @@
   const USER_KEY = 'aiplatform_user';
   const DEFAULT_TIMEOUT = 20000; // 20s — never spin forever
 
+  // Route API calls through Next.js (port 3000) — the public gateway can reach
+  // port 3000 but NOT port 8000 directly. Next.js's /api/v1/[...path] route
+  // handler streams the request to FastAPI at 127.0.0.1:8000.
   function apiUrl(path) {
     const sep = path.includes('?') ? '&' : '?';
-    return API_BASE + path + sep + 'XTransformPort=8000';
+    return API_BASE + path + sep + 'XTransformPort=3003';
   }
 
   function getToken() { return localStorage.getItem(TOKEN_KEY); }
