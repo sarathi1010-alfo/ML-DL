@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="aiLogoGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10b981"/>
+      <stop offset="0.5" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="aiLogoAccent" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#d946ef"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer hexagon -->
+  <path d="M24 3 L41 12.5 L41 35.5 L24 45 L7 35.5 L7 12.5 Z"
+        stroke="url(#aiLogoGrad)" stroke-width="2.4" stroke-linejoin="round" fill="none"/>
+  <!-- Inner neural brain mesh -->
+  <g stroke="url(#aiLogoGrad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9">
+    <path d="M16 18 Q24 12 32 18 Q34 24 32 30 Q24 36 16 30 Q14 24 16 18 Z"/>
+    <path d="M20 22 L28 22 M20 26 L28 26"/>
+  </g>
+  <!-- Accent nodes -->
+  <circle cx="16" cy="18" r="2.2" fill="url(#aiLogoAccent)"/>
+  <circle cx="32" cy="18" r="2.2" fill="url(#aiLogoAccent)"/>
+  <circle cx="16" cy="30" r="2.2" fill="url(#aiLogoAccent)"/>
+  <circle cx="32" cy="30" r="2.2" fill="url(#aiLogoAccent)"/>
+  <circle cx="24" cy="24" r="2.8" fill="url(#aiLogoGrad)"/>
+</svg>

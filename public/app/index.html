@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f17" />
+  <meta name="description" content="AI Engineering Platform — production-grade AI & ML engineering dashboard with 8 modules: Churn, Healthcare Premium, CNN Damage, BERT NLP, RAG, Agentic HR, SLM Edge." />
+  <title>AI Engineering Platform</title>
+
+  <!-- Favicon (inline SVG) -->
+  <link rel="icon" type="image/svg+xml" href="/app/assets/logo.svg" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/app/css/variables.css" />
+  <link rel="stylesheet" href="/app/css/base.css" />
+  <link rel="stylesheet" href="/app/css/components.css" />
+  <link rel="stylesheet" href="/app/css/layout.css" />
+  <link rel="stylesheet" href="/app/css/views.css" />
+
+  <!-- Set theme early to avoid FOUC -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('aiplatform_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <!-- The app shell is built by app.js on boot. The #view container holds the current view. -->
+  <noscript>
+    <div style="padding: 24px; font-family: system-ui, sans-serif; color: #e6edf3; background: #0b0f17; min-height: 100vh;">
+      <h1>JavaScript required</h1>
+      <p>The AI Engineering Platform requires JavaScript to run. Please enable JavaScript in your browser.</p>
+    </div>
+  </noscript>
+
+  <!-- Load order matters: utils first, then api, charts, components, router, views, then app.js boots -->
+  <script src="/app/js/utils.js"></script>
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/charts.js"></script>
+  <script src="/app/js/components.js"></script>
+  <script src="/app/js/router.js"></script>
+
+  <!-- Views (each registers itself on window.Views) -->
+  <script src="/app/js/views/login.js"></script>
+  <script src="/app/js/views/dashboard.js"></script>
+  <script src="/app/js/views/churn.js"></script>
+  <script src="/app/js/views/healthcare.js"></script>
+  <script src="/app/js/views/damage.js"></script>
+  <script src="/app/js/views/nlp.js"></script>
+  <script src="/app/js/views/rag.js"></script>
+  <script src="/app/js/views/agent.js"></script>
+  <script src="/app/js/views/monitoring.js"></script>
+  <script src="/app/js/views/slm.js"></script>
+  <script src="/app/js/views/settings.js"></script>
+
+  <!-- Bootstrap (must come last) -->
+  <script src="/app/js/app.js"></script>
+</body>
+</html>

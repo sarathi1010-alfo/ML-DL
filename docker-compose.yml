@@ -1,0 +1,61 @@
+# docker-compose.yml — AI Engineering Platform
+# Orchestrates the FastAPI backend, the LLM mini-service, and the frontend (nginx).
+#
+# Usage:
+#   docker compose up --build
+#
+# Services:
+#   backend   :8000   FastAPI + ML models (XGBoost, LightGBM, FAISS, …)
+#   llm       :3003   Node + z-ai-web-dev-sdk LLM service (RAG + agent reasoning)
+#   frontend  :8080   nginx serving the pure HTML/CSS/JS SPA, proxying /api → backend
+
+services:
+  backend:
+    build: ./backend
+    container_name: aiep-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-ai-platform-secret-key-change-me}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - PLATFORM_DATABASE_URL=sqlite:///./data/platform.db
+      - LLM_SERVICE_URL=http://llm:3003
+      - CORS_ORIGINS=*
+      - LOG_LEVEL=INFO
+    volumes:
+      - backend-data:/app/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - llm
+    restart: unless-stopped
+
+  llm:
+    build: ./mini-services/llm-service
+    container_name: aiep-llm
+    ports:
+      - "3003:3003"
+    # z-ai-web-dev-sdk reads credentials from the environment in production.
+    # In the sandbox the SDK is pre-authenticated; for external deployment set
+    # the relevant env vars (API key etc.) here.
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: aiep-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  backend-data:
