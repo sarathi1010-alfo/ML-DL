@@ -35,7 +35,10 @@
     'POST /explain/recommendations': 'explain_recommendations',
     'GET /safety/stats': 'safety_stats',
     'POST /safety/screen': 'safety_screen',
-    'POST /safety/evaluate': 'safety_evaluate'
+    'POST /safety/evaluate': 'safety_evaluate',
+    // RAG medical knowledge base (Task ID 6)
+    'GET /rag/documents': 'rag_documents',
+    'POST /rag/query': 'rag_query'
   };
 
   function apiUrl(path) {

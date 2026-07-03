@@ -11,7 +11,7 @@ from .analysis import (
     MedicalEntity, Readability,
 )
 from .slm import (
-    ScenarioRequest, ScenarioResponse, TerminologyItem,
+    ScenarioRequest, ScenarioResponse, TerminologyItem, RagSourceRef,
     ExplainRequest, ExplainResponse, ConverseRequest, ConverseResponse,
 )
 from .genai import (
@@ -34,4 +34,8 @@ from .explainability import (
     ProficiencyExplainRequest, ProficiencyExplainResponse, Contribution,
     AcquisitionExplainRequest, AcquisitionExplainResponse, AttentionPoint,
     RecommendationsExplainRequest, RecommendationsExplainResponse, RecommendationReasoning,
+)
+from .rag import (
+    RagQueryRequest, RagQueryResponse, RagSource,
+    RagUploadResponse, RagDocumentOut, RagDocumentsResponse, RagDeleteResponse,
 )

@@ -640,3 +640,140 @@ Next actions for orchestrator:
 - Optionally add /explain/recommendations to API_CONTRACT.md (it's a third explain endpoint that the backend exposes but the original contract doesn't enumerate).
 - Optionally hook /safety/screen into the SLM/GenAI/Agent views to show the safety verdict inline with each generated response (currently only the dedicated Safety view surfaces it).
 - Optionally wire real learner_id data into Panel C (Skill Progression Graph) of the Explainability view; today it renders synthetic data with a foot-note explaining so.
+
+---
+Task ID: 6
+Agent: rag-knowledge-builder
+Task: Add the missing RAG (Retrieval-Augmented Generation) component — Medical Knowledge Base — required by the GenAI & Data Science Specialization Framework (PDF Day 8: "RAG, Vector DBs & Prompt Engineering").
+
+Work Log:
+- Read /home/z/my-project/worklog.md (Tasks 0/2/3/4/5/12) and /home/z/my-project/API_CONTRACT.md to understand the current MediLingua backend (6 models: proficiency RF+XGB, acquisition LightGBM+Attn, NLP rule-based, SLM LLM, GenAI LLM, Agent ReAct; plus Safety Layer + Explainability added in Task 4/5). Backend on port 8000, LLM service on port 3003, frontend SPA pure HTML/CSS/JS.
+- Audited existing code: app/main.py, routers/__init__.py, services/{model_registry,metrics_service,llm_client,safety_service,slm_service,explainability_service}.py, schemas/{slm,safety,explainability,metrics,__init__}.py. Confirmed Python 3.12 + faiss-cpu 1.14.3 + sklearn 1.5.2 + numpy + pandas + httpx available at /home/z/.venv.
+
+Files added/changed:
+- backend/app/schemas/rag.py  (NEW)
+  * RagQueryRequest {query, top_k=3}, RagQueryResponse {answer, sources, retrieval_confidence, chunks_used, latency_ms, model, llm_used}.
+  * RagSource {chunk_id, text, score, rank, document_id, document_filename, category}.
+  * RagUploadResponse {document_id, filename, chunks, message}.
+  * RagDocumentOut {id, filename, chunks, uploaded_at, source}.
+  * RagDocumentsResponse {documents, total_documents, total_chunks}.
+  * RagDeleteResponse {status="deleted", id, chunks_removed}.
+
+- backend/app/services/rag_service.py  (NEW, ~520 lines)
+  * Curated _DEFAULT_KB with 59 chunks across 10 categories: cardiology (6), neurology (5), pediatrics (5), emergency (5), communication (8), documentation (5), cultural (5), grammar (6), cefr (6), specialty (8). Each chunk is a 2-4 sentence paragraph covering medical terminology, patient-communication best practices, SOAP/discharge documentation, cultural competence, conditional/passive grammar patterns, CEFR descriptors (A1→C2), and specialty-specific tips (cardiology/neurology/pediatrics/emergency/oncology/geriatrics/psychiatry/surgery).
+  * chunk_text(text, target_sentences=3, overlap=1) — regex sentence splitter + sliding-window chunker with 1-sentence overlap.
+  * RagService class:
+      - seed() → seeds the default KB as a single "seed_kb" document (59 chunks), then builds the TF-IDF/SVD/FAISS pipeline.
+      - _rebuild_index() → TfidfVectorizer(max_features=5000, ngram_range=(1,2), stop_words='english', sublinear_tf=True) + TruncatedSVD(n_components=min(64, n_chunks-1), random_state=42) + L2-normalize + FAISS IndexFlatIP. Index is rebuilt on every add/delete (small data, ~150ms).
+      - _embed_query(query) → TF-IDF transform + SVD transform + L2 normalize → (1, 64) float32 vector.
+      - retrieve(query, top_k=3) → embeds query, FAISS IndexFlatIP.search, returns list of {chunk_id, text, score, rank, document_id, document_filename, category} with cosine scores clamped to [0, 1].
+      - async query(query, top_k=3) → retrieve top-k chunks, then await llm_client.chat(...) with a RAG prompt that includes the retrieved context + the question. Falls back to "Based on the medical communication knowledge base (<category>): <top chunk>" template answer if LLM unavailable or returns empty. Returns {answer, sources, retrieval_confidence (mean of top-k scores), chunks_used, latency_ms, model, llm_used}.
+      - add_document(filename, text) → detects JSON (extracts text/content/body/abstract/description fields) or plain text, splits into ~3-sentence chunks with overlap, appends to _chunks, rebuilds index. Returns chunk count.
+      - list_documents() → sorted by uploaded_at descending.
+      - delete_document(document_id) → filters out chunks, re-numbers chunk_ids sequentially, rebuilds index. Refuses to delete the seed KB (returns False).
+      - stats() → total_chunks, total_documents, call_count, avg_latency_ms, embedding_dim, vector_store.
+  * Singleton: `rag_service = RagService()`.
+  * Tested standalone: retrieve("How should I explain a diagnosis to a patient?") → 3 sources, top score 0.4321 (communication category: plain-language explanations chunk).
+
+- backend/app/routers/rag.py  (NEW)
+  * POST /api/v1/rag/query {query, top_k} → RagQueryResponse. Async endpoint. Records latency to metrics_service under "RAG FAISS".
+  * POST /api/v1/rag/upload (multipart file, .txt/.json/.md, max 500 KB) → RagUploadResponse. Decodes UTF-8, calls rag_service.add_document, returns document_id + chunk count.
+  * GET /api/v1/rag/documents → RagDocumentsResponse.
+  * DELETE /api/v1/rag/documents/{document_id} → RagDeleteResponse. Returns 403 if attempting to delete the seed KB; 404 if document not found.
+
+- backend/app/services/model_registry.py  (MODIFIED)
+  * Added `self._rag = None` to __init__.
+  * Added lazy `rag` property — instantiates RagService, calls seed(), sets _loaded["rag"] = "ready". Logs seeding time + chunk count.
+  * Added rag warm-up block to warm_up() (after explainability warm-up).
+  * Added "rag" entry to status_map().
+
+- backend/app/main.py  (MODIFIED)
+  * Imported rag_router.
+  * Added rag_router to the include_router loop.
+  * Startup (lifespan) → registry.warm_up() triggers rag.seed() (59 chunks across 1 document, 173-189ms warm-up time).
+
+- backend/app/routers/metrics.py  (MODIFIED)
+  * Added "RAG FAISS" entry to _model_metrics() with accuracy=1.0 if the KB is seeded (chunks > 0 and FAISS index is built), else 0.0.
+
+- backend/app/services/slm_service.py  (MODIFIED)
+  * Imported `from .model_registry import registry`.
+  * generate_scenario() now first calls `registry.rag.retrieve(f"{specialty} {scenario_type}", top_k=3)` and injects the retrieved knowledge into the LLM prompt as "Use the following retrieved medical-communication knowledge to ground the scenario, terminology, and questions". This makes scenario generation retrieval-augmented. Failures are logged but non-fatal (the scenario falls back to the LLM/template path).
+  * The scenario response dict now includes `rag_sources: list[dict]` — the 3 retrieved knowledge chunks that grounded the generation, with category/score/text/document_filename.
+
+- backend/app/schemas/slm.py  (MODIFIED)
+  * Added `RagSourceRef` schema {chunk_id, category, text, score, document_filename}.
+  * Added `rag_sources: list[RagSourceRef] = Field(default_factory=list)` to ScenarioResponse.
+
+- backend/app/schemas/__init__.py  (MODIFIED)
+  * Exported RagSourceRef (slm) and all 7 rag schemas.
+
+- backend/app/routers/__init__.py  (MODIFIED)
+  * Exported rag_router.
+
+- public/app/js/views/knowledge.js  (NEW, 320 lines)
+  * Two-panel layout: 360px left (documents) + flexible right (Q&A chat).
+  * Left panel: GET /rag/documents → list of document cards (seed KB badge "seed" + uploaded docs badge "uploaded", chunk count, relative upload time, delete button). Drag-drop dropzone (C.dropzone) accepts .txt/.json/.md → POST /rag/upload (FormData). Confirm modal before delete → DELETE /rag/documents/{id}. Auto-refresh after upload/delete.
+  * Right panel: 8 suggested-question chips (one-click to ask), chat transcript with user/assistant bubbles (assistant avatar = book icon), answer text + meta strip (retrieval-confidence badge color-coded success/warning/danger, chunks count, latency, LLM/fallback badge), expandable "Sources (N)" section showing each retrieved chunk with rank, category color-pill, score badge, document filename, and chunk text. Input row at bottom (Enter to send).
+  * Empty state with book icon and explanation of the RAG pipeline.
+  * Loading state with spinner + "Retrieving + generating…" text.
+  * Error state with red banner + error message.
+  * Registers window.Views['/knowledge'] = {title: 'Medical Knowledge Base', render}.
+
+- public/app/css/views.css  (MODIFIED, +220 lines)
+  * .knowledge-hero / .trust-hero-icon.knowledge — info-to-accent gradient hero strip.
+  * .knowledge-layout — CSS grid (360px + 1fr) with 960px breakpoint collapsing to single column.
+  * .docs-summary / .docs-list / .doc-item / .doc-item-icon / .doc-item-name / .doc-item-meta / .doc-delete-btn — document list cards. Seed docs get a left-border accent.
+  * .chip-row / .chip — suggested-question pill buttons with hover lift.
+  * .qa-transcript — scrollable chat container, max-height 520px, min-height 320px.
+  * .qa-empty / .qa-empty-icon — empty-state placeholder.
+  * .qa-bubble / .qa-bubble-avatar / .qa-bubble-body — chat bubbles. User bubbles align right with primary-soft background; assistant bubbles align left with surface background.
+  * .qa-bubble-meta — meta strip with confidence/chunks/latency/llm badges.
+  * .qa-sources-header / .qa-chevron — expandable sources toggle.
+  * .qa-source-item / .qa-source-head / .qa-source-rank / .qa-source-cat / .qa-source-score / .qa-source-text — source cards with rank, colored category pill, score badge (success/warning/danger), and italicized chunk text.
+  * .qa-input-row / .qa-input / .qa-send-btn — input row.
+  * Responsive breakpoint at 720px collapses the layout and widens bubbles.
+
+- public/app/index.html  (MODIFIED)
+  * Added <script src="/app/js/views/knowledge.js"></script> between studio.js and tutor.js (between "Content Studio" and "AI Tutor" as required).
+
+- public/app/js/app.js  (MODIFIED)
+  * NAV now has 12 items in 3 sections (was 11): added {path: '/knowledge', label: 'Medical Knowledge Base', icon: 'book'} between Content Studio and AI Tutor.
+
+- public/app/js/api.js  (MODIFIED)
+  * Extended STATIC_MAP with 2 new keys: 'GET /rag/documents' → 'rag_documents', 'POST /rag/query' → 'rag_query' (offline fallback).
+
+- public/app/js/data.js  (MODIFIED)
+  * Added 2 static-fallback blocks (rag_documents, rag_query) with shapes that match the backend Pydantic schemas EXACTLY.
+
+- API_CONTRACT.md  (MODIFIED)
+  * Added new "## 8. RAG — Medical Knowledge Base" section documenting the 4 endpoints with example requests/responses, the embedding pipeline (TF-IDF + SVD(64) + FAISS IndexFlatIP), and the seed-KB-deletion guard.
+
+Verification (all passed):
+  * GET /api/v1/health → status=healthy, 7 models loaded (added "rag":"ready"), database=connected, llm_service=connected. Server log shows "RAG seed complete: 59 chunks across 1 document(s). RAG ready (189ms, 59 chunks seeded)".
+  * POST /api/v1/rag/query {"query":"How should I explain a diagnosis to a patient?","top_k":3} → answer="When explaining a diagnosis to a patient, use plain-language explanations instead of medical jargon [1]. For example, say \"heart attack\" instead of \"myocardial infarction\" and \"high blood pressure\" instead of \"hypertension\" [1]. Aim for a reading level..." (LLM-grounded answer citing [1] and [2]); sources=3 (rank 1: communication/0.4321, rank 2: documentation/0.4264, rank 3: documentation/0.4045); retrieval_confidence=0.421; chunks_used=3; latency_ms=2629; llm_used=true; model="TF-IDF + SVD(64) + FAISS IndexFlatIP".
+  * GET /api/v1/rag/documents → {documents:[{id:"seed_kb", filename:"MediLingua Seed Knowledge Base", chunks:59, source:"seed", uploaded_at:...}], total_documents:1, total_chunks:59}.
+  * POST /api/v1/rag/upload (multipart .txt) → added 2 chunks (from a 4-sentence respiratory disorders paragraph). Documents list then showed both seed (59) + uploaded (2) = 61 chunks.
+  * POST /api/v1/rag/query {"query":"What is magnetic resonance imaging?","top_k":3} after upload → top source category="user_upload" with retrieval_confidence=0.6659 (the uploaded chunks ranked highest), LLM answer grounded in the uploaded text. Confirms multi-document support.
+  * DELETE /api/v1/rag/documents/{user_doc_id} → {status:"deleted", id:..., chunks_removed:2}.
+  * DELETE /api/v1/rag/documents/seed_kb → HTTP 403 with detail="The seed knowledge base cannot be deleted." (contract-confirmed guard).
+  * GET /api/v1/metrics/models → 9 models including "RAG FAISS" (accuracy=1.0, calls=3). The 9-model list is now: Proficiency RF+XGB, Acquisition LightGBM+Attn, NLP Rule-Based, SLM TinyLlama-Q4, GenAI LLM, Agent ReAct, Safety Layer, Explainability, RAG FAISS.
+  * POST /api/v1/slm/scenario (cardiology/intermediate/patient_consultation) → LLM-generated Mr. Johnson scenario + 3 terminology cards + 3 questions + safety={verdict:safe, confidence:0.625} + NEW rag_sources=[3 chunks] (specialty:geriatrics@0.455, communication:open-ended-questions@0.444, specialty:cardiology-consultations@0.422). Confirms SLM scenario generation is now retrieval-augmented.
+  * Next.js proxy /papi/v1/rag/documents → HTTP 200 with the same JSON shape (frontend SPA can reach the RAG endpoints).
+  * node -c passed on all modified/new JS files (knowledge.js, app.js, api.js, data.js).
+  * /app/index.html now includes <script src="/app/js/views/knowledge.js"></script> (verified via curl).
+  * No errors in server.log except harmless FAISS AVX/AVX2/AVX512 warnings (FAISS loads the basic fallback fine, as in prior tasks).
+- Server left RUNNING on port 8000 (PID detached via daemon_start.py double-fork, parent=1). LLM service on 3003 powers the RAG answer synthesis + SLM scenario generation.
+
+Stage Summary:
+- Full RAG pipeline delivered: 59-chunk curated medical-communication knowledge base → TF-IDF (max_features=5000, ngram_range=(1,2)) + TruncatedSVD(64 dims) + L2-normalize → FAISS IndexFlatIP (inner product = cosine on normalized vectors) → top-k retrieval → LLM-grounded answer synthesis (with templated fallback when LLM is offline).
+- 4 new endpoints under /api/v1/rag/* (query/upload/documents/delete), all verified end-to-end.
+- SLM scenario generator is now retrieval-augmented: each scenario is grounded in 3 retrieved knowledge chunks (surfaced as rag_sources in the response).
+- 12th frontend view added ("Medical Knowledge Base", #/knowledge, book icon) with two-panel layout: document list (with drag-drop upload + delete) on the left, Q&A chat with expandable sources on the right.
+- /metrics/models now reports 9 models including RAG FAISS (accuracy = KB seeded & index built).
+- API_CONTRACT.md updated with the full RAG section (Task 8).
+- This completes the RAG requirement from the GenAI & Data Science Specialization Framework (PDF Day 8: "RAG, Vector DBs & Prompt Engineering").
+
+Next actions for orchestrator:
+- Optional: hook the SLM scenario view in the frontend to display the new rag_sources field (currently the scenario.js view doesn't render it; only the backend response includes it).
+- Optional: extend the seed KB beyond 59 chunks (currently just under the ~60 target) by adding more specialty entries if a deeper KB is desired.
+- Optional: persist uploaded documents to disk (data/rag_uploads.json) so they survive a backend restart. Currently the KB is in-memory and reseeds the default KB on each startup, dropping any user uploads.

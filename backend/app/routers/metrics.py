@@ -85,6 +85,13 @@ def _model_metrics(db: Session) -> list[ModelMetricOut]:
             "f1": 0.0,
             "rmse": 0.0,
         },
+        # RAG FAISS — retrieval-augmented generation; "accuracy" maps to 1.0 if the
+        # knowledge base is seeded (chunks > 0) and the FAISS index is built.
+        "RAG FAISS": {
+            "accuracy": 1.0 if (registry._rag and len(registry._rag._chunks) > 0 and registry._rag._index is not None) else 0.0,
+            "f1": 0.0,
+            "rmse": 0.0,
+        },
     }
     for name, info in base.items():
         calls = models_info.get(name, {}).get("calls", 0)

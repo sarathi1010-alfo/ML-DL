@@ -27,6 +27,7 @@ from .routers import (
     slm_router, genai_router, agent_router,
     metrics_router, predictions_router,
     safety_router, explainability_router,
+    rag_router,
 )
 
 
@@ -87,6 +88,7 @@ for r in (
     slm_router, genai_router, agent_router,
     metrics_router, predictions_router,
     safety_router, explainability_router,
+    rag_router,
 ):
     app.include_router(r, prefix=API_PREFIX)
 

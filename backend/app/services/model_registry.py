@@ -96,6 +96,7 @@ class ModelRegistry:
         self._slm = None
         self._genai = None
         self._agent = None
+        self._rag = None
         self._loaded: dict[str, str] = {}
 
     # ---- cache helpers ----
@@ -176,6 +177,23 @@ class ModelRegistry:
                     self._loaded["agent"] = "ready"
         return self._agent
 
+    @property
+    def rag(self):
+        if self._rag is None:
+            with self._lock:
+                if self._rag is None:
+                    from .rag_service import rag_service as _rag_service
+                    logger.info("Seeding RAG knowledge base...")
+                    t0 = time.perf_counter()
+                    n = _rag_service.seed()
+                    self._rag = _rag_service
+                    self._loaded["rag"] = "ready"
+                    logger.info(
+                        f"RAG ready ({(time.perf_counter()-t0)*1000:.0f}ms, "
+                        f"{n} chunks seeded)"
+                    )
+        return self._rag
+
     def warm_up(self) -> None:
         """Pre-train the core ML models (proficiency, acquisition, nlp)."""
         try:
@@ -220,6 +238,11 @@ class ModelRegistry:
             _ = explainability_service
         except Exception as e:
             logger.error(f"explainability warm-up failed: {e}")
+        # Pre-seed the RAG knowledge base (TF-IDF + SVD + FAISS index)
+        try:
+            _ = self.rag
+        except Exception as e:
+            logger.error(f"rag warm-up failed: {e}")
 
     def status_map(self) -> dict[str, str]:
         return {
@@ -229,6 +252,7 @@ class ModelRegistry:
             "slm": self._loaded.get("slm", "not_loaded"),
             "genai": self._loaded.get("genai", "not_loaded"),
             "agent": self._loaded.get("agent", "not_ready"),
+            "rag": self._loaded.get("rag", "not_loaded"),
         }
 
 

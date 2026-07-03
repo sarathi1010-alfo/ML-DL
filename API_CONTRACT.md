@@ -135,6 +135,72 @@ Response:
 ### `GET /api/v1/metrics` → `{api_usage, latency, error_rate, model_metrics, system, endpoints, time_series}`
 ### `GET /api/v1/predictions` → `{predictions:[{id, type, input, output, latency_ms, created_at}]}`
 
+## 8. RAG — Medical Knowledge Base
+Retrieval-augmented generation pipeline over a curated knowledge base of ~60
+medical-communication chunks (terminology, patient communication, documentation
+guidelines, cultural competence, grammar patterns, CEFR descriptors, specialty tips).
+Embeddings: TF-IDF (max_features=5000, ngram_range=(1,2)) → TruncatedSVD (64 dims)
+→ L2-normalize. Vector store: FAISS `IndexFlatIP` (inner product == cosine on
+normalized vectors). Answer synthesis calls the LLM service with the retrieved
+context; falls back to a templated answer when the LLM is offline.
+
+### `POST /api/v1/rag/query`
+Request:
+```json
+{"query":"How should I explain a diagnosis to a patient?","top_k":3}
+```
+Response:
+```json
+{
+  "answer": "When explaining a diagnosis to a patient, use plain language instead of medical jargon [1]. For example, say \"heart attack\" instead of \"myocardial infarction.\" Aim for a 6th-to-8th grade reading level and confirm understanding using the teach-back method [1, 2].",
+  "sources": [
+    {
+      "chunk_id": 23,
+      "text": "Plain-language explanations replace medical jargon with everyday words the patient can understand...",
+      "score": 0.4321,
+      "rank": 1,
+      "document_id": "seed_kb",
+      "document_filename": "MediLingua Seed Knowledge Base",
+      "category": "communication"
+    }
+  ],
+  "retrieval_confidence": 0.421,
+  "chunks_used": 3,
+  "latency_ms": 2913,
+  "model": "TF-IDF + SVD(64) + FAISS IndexFlatIP",
+  "llm_used": true
+}
+```
+
+### `POST /api/v1/rag/upload`
+Multipart file upload (`.txt`, `.json`, `.md`, max 500 KB). The file is split
+into ~3-sentence chunks with 1-sentence overlap, then added to the FAISS index
+(index is rebuilt).
+Response:
+```json
+{"document_id":"doc_da1ade4598","filename":"resp.txt","chunks":2,"message":"Added 2 chunks from 'resp.txt' to the knowledge base."}
+```
+
+### `GET /api/v1/rag/documents`
+Response:
+```json
+{
+  "documents": [
+    {"id":"seed_kb","filename":"MediLingua Seed Knowledge Base","chunks":59,"uploaded_at":"2026-07-03T03:14:08.960750+00:00","source":"seed"},
+    {"id":"doc_da1ade4598","filename":"resp.txt","chunks":2,"uploaded_at":"2026-07-03T03:14:35.154216+00:00","source":"user"}
+  ],
+  "total_documents": 2,
+  "total_chunks": 61
+}
+```
+
+### `DELETE /api/v1/rag/documents/{document_id}`
+Response:
+```json
+{"status":"deleted","id":"doc_da1ade4598","chunks_removed":2}
+```
+The seed KB (`id=seed_kb`) cannot be deleted.
+
 ## Database Tables
 - `users` (id, username, email, hashed_password, role, specialty, created_at)
 - `learning_sessions` (id, user_id, type, input, output, latency_ms, created_at)

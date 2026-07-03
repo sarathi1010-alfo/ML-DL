@@ -12,6 +12,7 @@ from typing import Any
 from ..core.logging import logger
 from .llm_client import llm_client
 from .safety_service import safety_service
+from .model_registry import registry
 
 
 SYSTEM_PROMPT = (
@@ -204,6 +205,23 @@ class SlmService:
         difficulty = payload.get("difficulty", "intermediate")
         scenario_type = payload.get("scenario_type", "patient_consultation")
 
+        # --- RAG grounding: retrieve relevant medical-communication
+        # knowledge chunks and inject them into the LLM prompt. ---
+        rag_context = ""
+        rag_sources: list[dict] = []
+        try:
+            rag = registry.rag
+            rag_sources = rag.retrieve(
+                f"{specialty} {scenario_type.replace('_', ' ')}", top_k=3
+            )
+            if rag_sources:
+                rag_context = "\n\n".join(
+                    f"Knowledge [{i + 1}] ({s['category']}): {s['text']}"
+                    for i, s in enumerate(rag_sources)
+                )
+        except Exception as e:
+            logger.warning(f"SLM scenario RAG retrieval failed: {e}")
+
         # Try LLM
         scenario_text = ""
         terminology: list[dict] = []
@@ -213,6 +231,14 @@ class SlmService:
             prompt = (
                 f"Generate a {difficulty} medical role-play scenario for a {specialty} specialist "
                 f"in a {scenario_type.replace('_', ' ')} context.\n\n"
+            )
+            if rag_context:
+                prompt += (
+                    f"Use the following retrieved medical-communication knowledge "
+                    f"to ground the scenario, terminology, and questions:\n"
+                    f"{rag_context}\n\n"
+                )
+            prompt += (
                 f"Respond EXACTLY in this format (one section per line, use the literal markers):\n"
                 f"SCENARIO: <3-5 sentence patient presentation with age, complaint, key vitals/exam findings>\n"
                 f"TERMS:\n"
@@ -264,6 +290,7 @@ class SlmService:
             "model": self.model_name,
             "latency_ms": latency_ms,
             "safety": safety_info,
+            "rag_sources": rag_sources,
         }
 
     def _parse_scenario_llm(self, text: str, specialty: str) -> tuple[str, list[dict], list[str]]:

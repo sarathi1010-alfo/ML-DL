@@ -513,3 +513,131 @@
    513→   513→- 10-view SPA frontend, pure HTML/CSS/JS, medical SaaS design.
    514→   514→- Backend running on port 8000, all endpoints return real JSON. LLM service on 3003 powers SLM/GenAI/Agent.
    515→   515→
+   516→   516→---
+   517→   517→Task ID: 4
+   518→   518→Agent: safety-explainability-builder
+   519→   519→Task: Add AI Safety Layer + Explainability Layer to the MediLingua FastAPI backend.
+   520→   520→
+   521→   521→Work Log:
+   522→   522→- Read /home/z/my-project/worklog.md (Tasks 0/2/3/6/7/11/12) and /home/z/my-project/API_CONTRACT.md to understand the current MediLingua backend (6 models: proficiency RF+XGB, acquisition LightGBM+Attn, NLP rule-based, SLM TinyLlama, GenAI LLM, Agent ReAct; 9 routers under /api/v1).
+   523→   523→- Audited existing code: app/main.py, routers/__init__.py, services/{slm,genai,agent,proficiency,acquisition,model_registry,metrics}_service.py, schemas/{slm,genai,agent,metrics}.py. Confirmed Python 3.12 + FastAPI + sklearn + xgboost + lightgbm + numpy + pandas + httpx available at /home/z/.venv.
+   524→   524→
+   525→   525→- Created app/services/safety_service.py — deterministic, synchronous, <5ms safety layer (no LLM calls):
+   526→   526→  * SafetyService.screen(text, context) returns {safe, verdict, confidence, reasons, disclaimers, filtered_text, latency_ms, context}.
+   527→   527→  * Toxicity/harm filter: 40 compiled regex patterns across 13 categories — self_harm, violence, weapons, illegal_drugs, sexual_content, hate_speech, dangerous_medical, pii, criminal, eating_disorder, extremism, harassment, euthanasia, biosecurity, dangerous_behavior. Each pattern tagged "block" or "warn".
+   528→   528→  * Diagnosis restriction: 13 patterns detect direct diagnoses directed at the user ("you have", "you are suffering from", "I diagnose you with", "your diagnosis is", "it is clear that you have", "you are showing classic signs of", "I can confidently tell you that you have", "you definitely have", plus user-requested diagnosis "diagnose my <body part>", "is it a heart attack?", "do I have a stroke?"). Strict contexts (slm/genai/agent/diagnosis) → blocked; education/general → warning.
+   529→   529→  * Hallucination confidence scoring: weighted blend (25% hedging-word ratio - 30% absolutist-word ratio + 20% disclaimer presence + 35% medical-term-dictionary hits/3 + 10% length-sanity), mapped to [0,1]. ~200-term medical dictionary (cardiology, neurology, respiratory, GI, renal, endocrine, infectious, heme/onc, pediatrics, emergency, pharm, vitals/exam, general clinical).
+   530→   530→  * Medical disclaimer injection: standard disclaimer ("This content is for educational purposes only. Always consult a licensed medical professional for clinical decisions.") appended to SLM/GenAI/Agent responses if not already present (via _DISCLAIMER_MARKERS check).
+   531→   531→  * Safety classification: verdict ∈ {safe, warning, blocked}. Blocked → response replaced with SAFE_FALLBACK.
+   532→   532→  * Cumulative stats: total_screened, blocked_count, warning_count, safe_count, avg_confidence, top_categories, _last_eval_pass_rate, _avg_latency_ms.
+   533→   533→  * Built-in test suite: 10 test cases (7 unsafe, 3 safe) covering self-harm, direct diagnosis, user-requested diagnosis, dangerous medical advice (stop insulin), illegal drug solicitation, dangerous remedy + absolutist claim, definitive cancer diagnosis, educational explanation with disclaimer, pure definition, educational with hedging + disclaimer. All 10 pass.
+   534→   534→
+   535→   535→- Created app/services/explainability_service.py — model-agnostic explanations:
+   536→   536→  * ExplainabilityService.explain_proficiency(input, prediction) → SHAP-style top-5 feature contributions using trained model's feature_importances_ × scaled input value × direction (increases/decreases/neutral), with human-readable explanations ("Your comprehension score of 80 strongly supports a B2 level"). Direction inferred from z-score sign (above/below training mean). Falls back to uniform importance if model not loaded.
+   537→   537→  * ExplainabilityService.explain_acquisition(history, forecast) → softmax attention weights over last min(N, 14) historical points, returned as time-series with rank + per-point explanation. Top-3 influencers + summary. Handles both full AcquisitionResponse dict and bare list of forecast points.
+   538→   538→  * ExplainabilityService.explain_recommendations(input, prediction) → per-recommendation natural-language "why" combining feature importance % + gap vs. next-CEFR-level threshold + study-habits benchmark. E.g., "Recommendation: Focus on medical conditional tenses — because this area has 25.5% feature importance in the proficiency model, and your grammar score (65) is 10.0 points below the C1 threshold (75)."
+   539→   539→
+   540→   540→- Created app/schemas/safety.py — ScreenRequest/Response, SafetyStats, EvaluateRequest/Response, EvaluateCaseResult.
+   541→   541→- Created app/schemas/explainability.py — ProficiencyExplainRequest/Response, Contribution, AcquisitionExplainRequest/Response, AttentionPoint, RecommendationsExplainRequest/Response, RecommendationReasoning.
+   542→   542→
+   543→   543→- Added SafetyInfo schema (verdict, confidence, reasons, disclaimers, latency_ms) to schemas/slm.py, schemas/genai.py, schemas/agent.py. Added `safety: SafetyInfo | None = None` field to ScenarioResponse, ExplainResponse, ConverseResponse, CaseStudyResponse, QuizResponse, SimulationResponse, TutorResponse.
+   544→   544→
+   545→   545→- Wired safety into the three LLM-using services:
+   546→   546→  * services/slm_service.py: scenario() now screens scenario_text + each terminology example; explain() screens explanation; converse() screens response. Each returns the screening result in a `safety` field. Blocked verdicts → response replaced with SAFE_FALLBACK.
+   547→   547→  * services/genai_service.py: generate_case_study() screens case_text; generate_quiz() screens each question's explanation + the overall content; generate_simulation() screens sim_text.
+   548→   548→  * services/agent_service.py: run() screens the LLM-composed final_answer; safety info included in the response.
+   549→   549→  * All disclaimers auto-appended when not already present.
+   550→   550→
+   551→   551→- Created app/routers/safety.py:
+   552→   552→  * POST /api/v1/safety/screen → {text, context} → ScreenResponse (safe, verdict, confidence, reasons, disclaimers, filtered_text, latency_ms, context).
+   553→   553→  * GET /api/v1/safety/stats → cumulative stats (total_screened, blocked_count, warning_count, safe_count, avg_confidence, top_categories).
+   554→   554→  * POST /api/v1/safety/evaluate → runs the built-in 10-case suite, returns EvaluateResponse (total, passed, failed, pass_rate, results[]). Accepts optional caller-supplied test_cases.
+   555→   555→
+   556→   556→- Created app/routers/explainability.py:
+   557→   557→  * POST /api/v1/explain/proficiency → SHAP-style top-5 contributions + summary.
+   558→   558→  * POST /api/v1/explain/acquisition → attention-weights time-series + top influencers + summary.
+   559→   559→  * POST /api/v1/explain/recommendations → per-recommendation natural-language "why".
+   560→   560→
+   561→   561→- Registered new routers in app/routers/__init__.py (safety_router, explainability_router) and app/main.py (added to the include loop).
+   562→   562→- Updated app/routers/metrics.py _model_metrics() to add 2 new entries to the per-model metrics list:
+   563→   563→  * "Safety Layer" — accuracy = live test-suite pass-rate (cached as safety_service._last_eval_pass_rate after each /safety/evaluate call AND at startup via registry.warm_up()).
+   564→   564→  * "Explainability" — accuracy = 1.0 if proficiency model's feature_importances_ is loaded, else 0.0.
+   565→   565→- Updated app/services/model_registry.py warm_up() to pre-run safety_service.evaluate() at startup so the pass-rate is available immediately via /metrics/models.
+   566→   566→- Updated app/schemas/__init__.py to export the new safety + explainability schemas.
+   567→   567→
+   568→   568→- Killed old backend (`pkill -f "uvicorn app.main:app"`) and restarted via `python3 daemon_start.py` (double-fork daemon for full detach from the bash session).
+   569→   569→
+   570→   570→Verification (all passed):
+   571→   571→  * GET /api/v1/health → status=healthy, version=2.0.0, 6 models loaded (proficiency, acquisition, nlp, slm, genai, agent), database=connected, llm_service=connected. Server log shows "Safety layer warmed up: 10/10 test cases passed (pass_rate=100.00%)".
+   572→   572→  * POST /api/v1/safety/screen {"text":"You have myocardial infarction and need immediate surgery.","context":"diagnosis"} → verdict=blocked, confidence=0.4306, reasons=["Direct diagnosis: 'you have/are suffering from'"], filtered_text=SAFE_FALLBACK (with disclaimer).
+   573→   573→  * POST /api/v1/safety/screen {"text":"Hypertension is defined as persistently elevated blood pressure above 130/80 mmHg.","context":"education"} → verdict=safe, confidence=0.5278, disclaimers=[standard disclaimer].
+   574→   574→  * POST /api/v1/safety/evaluate {} → total=10, passed=10, failed=0, pass_rate=1.0. All 7 unsafe cases (self-harm, direct diagnosis, user-requested diagnosis, stop-insulin, illegal drug, dangerous remedy, definitive cancer) → blocked. All 3 safe educational cases → safe.
+   575→   575→  * POST /api/v1/safety/screen {"text":"You are suffering from acute coronary syndrome and require immediate stenting. Stop taking your blood pressure medication.","context":"diagnosis"} → verdict=blocked with TWO reasons (dangerous_medical + direct diagnosis).
+   576→   576→  * GET /api/v1/safety/stats → total_screened=26 (after test suite + SLM/GenAI/Agent screenings), blocked_count=15, safe_count=11, avg_confidence=0.46, top_categories=[dangerous_medical, self_harm, illegal_drugs].
+   577→   577→  * POST /api/v1/explain/proficiency (contract example: vocab=78, gram=65, flue=72, comp=80, 45 exercises, 120h, 30d, predicted B2) → top_contributions: comprehension_score (imp 22.7%, value 80, ↑), vocabulary_score (imp 21.0%, value 78, ↑), fluency_score (imp 22.3%, value 72, ↑), grammar_score (imp 25.5%, value 65, ↑), exercises_completed (imp 2.9%, value 45, ↓ — below 'good' benchmark 50). Summary: "The model assigned CEFR level B2, driven primarily by comprehension score (importance 22.7%, value 80, direction: increases). Secondary contributor: vocabulary score (importance 21.0%)."
+   578→   578→  * POST /api/v1/explain/acquisition (history=[65..80], forecast=3 points) → 10 attention_weights over the 10 history points; most influential = score 80 from 1 day ago (weight 0.32, rank 1); top_influencers = [80@-1d (0.32), 78@-2d (0.21), 76@-3d (0.14)]. Summary: "The forecast improves from 81.0 to 83.0 over 3 days. The most influential historical data point is a score of 80.0 from 1 day(s) ago, which received attention weight 0.321."
+   579→   579→  * POST /api/v1/explain/recommendations → 3 reasoning items, e.g., "Recommendation: Focus on medical conditional tenses — because this area has 25.5% feature importance in the proficiency model, and your grammar score (65) is 10.0 points below the C1 threshold (75)."
+   580→   580→  * POST /api/v1/slm/scenario (cardiology/intermediate/patient_consultation) → LLM-generated Mr. Johnson scenario + 3 terminology cards + 3 questions, all with disclaimer auto-appended. Response now includes safety={verdict:"safe", confidence:0.625, disclaimers:[standard disclaimer], latency_ms:0}. Total latency ~6.9s (LLM bound).
+   581→   581→  * POST /api/v1/slm/explain (term="hypertension") → LLM explanation + safety field (verdict=safe, confidence=0.528, disclaimer appended).
+   582→   582→  * POST /api/v1/genai/case-study (cardiology/intermediate) → LLM case + 3 questions + 3 objectives + safety={verdict:safe, confidence:0.625, disclaimer present}. Latency ~9.5s.
+   583→   583→  * POST /api/v1/genai/quiz (pediatrics/vaccination/2 questions) → 2 MCQs with explanations (each screened) + safety={verdict:safe, confidence:0.729}. Latency ~13s.
+   584→   584→  * POST /api/v1/agent/tutor (L001, B1→C1, cardiology) → 5-step ReAct timeline + LLM final answer + safety={verdict:safe, confidence:0.333, disclaimer appended}. Latency ~8.5s.
+   585→   585→  * GET /api/v1/metrics/models → 8 models (added Safety Layer accuracy=1.0 = test-suite pass-rate, Explainability accuracy=1.0 = feature_importances_ loaded). SLM/GenAI/Agent/Safety/Explainability all show calls + latency.
+   586→   586→  * GET /openapi.json → 27 paths registered (was 21), including the 6 new ones: /api/v1/safety/{screen,stats,evaluate}, /api/v1/explain/{proficiency,acquisition,recommendations}.
+   587→   587→  * No errors in server.log (only the harmless FAISS AVX warnings).
+   588→   588→
+   589→   589→Stage Summary:
+   590→   590→- Two production layers delivered: (1) AI Safety Layer screening ALL LLM output from SLM/GenAI/Agent with verdict/confidence/reasons/disclaimer injection + safe-fallback replacement; (2) Explainability Layer with SHAP-style feature contributions, attention-weight time-series, and natural-language recommendation reasoning.
+   591→   591→- 6 new endpoints under /api/v1/safety/* and /api/v1/explain/*, all verified end-to-end.
+   592→   592→- Safety test suite: 10/10 cases pass at startup (logged). Live cumulative stats tracked via /safety/stats.
+   593→   593→- /metrics/models now reports 8 models including Safety Layer (accuracy = live pass-rate) and Explainability (accuracy = feature_importances_ loaded).
+   594→   594→- Backend RUNNING on port 8000 (PID detached via daemon_start.py double-fork, parent=1). LLM service on port 3003 powers SLM/GenAI/Agent. All endpoints return real JSON with safety + explainability fields.
+   595→   595→
+   596→   596→---
+   597→   597→Task ID: 5
+   598→   598→Agent: frontend-trust (sub-agent)
+   599→   599→Task: Add Explainability Dashboard + AI Trust & Safety views to the MediLingua frontend (pure HTML/CSS/JS SPA).
+   600→   600→
+   601→   601→Work Log:
+   602→   602→- Read worklog.md + API_CONTRACT.md and reviewed the existing frontend (8 views, hash router, vanilla canvas charts, embedded static fallbacks).
+   603→   603→- Confirmed the backend agent had already added /explain/{proficiency,acquisition,recommendations} and /safety/{stats,screen,evaluate} endpoints by inspecting backend/app/routers/*.py and schemas/*.py. Aligned the frontend to the REAL response shapes (ProficiencyExplainResponse.top_contributions/all_contributions/summary; AcquisitionExplainResponse.attention_weights/top_influencers/summary; RecommendationsExplainResponse.reasoning; SafetyStats.top_categories list of [name,count] tuples; ScreenResponse.safe/verdict/confidence/reasons/disclaimers/filtered_text; EvaluateResponse.{total,passed,failed,pass_rate,results} top-level, results use {label,text,context,expected,actual,confidence,reasons,passed}).
+   604→   604→
+   605→   605→Files added/changed:
+   606→   606→- public/app/js/views/explainability.js  (NEW, 350+ lines)
+   607→   607→    Panel A — proficiency explainability: reuse proficiency sliders → POST /assess/proficiency → Promise.all([POST /explain/proficiency, POST /explain/recommendations]). Renders level badge + confidence gauge, SHAP-style diverging contribution chart, NL summary banner, per-feature explanation list with direction chips, per-recommendation "Why?" annotations with feature_importance_pct + gap_vs_threshold metadata.
+   608→   608→    Panel B — acquisition explainability: textarea + horizon slider → POST /track/acquisition → POST /explain/acquisition. Renders forecast chart (history + bands), attention-weights bar chart (top influencers highlighted in accent color), NL summary banner, top-influencer reasoning rows.
+   609→   609→    Panel C — skill progression graph: hand-built canvas line chart with 4 series (Vocabulary, Grammar, Fluency, Comprehension) over 12 weeks of synthetic data, plus per-skill delta cards.
+   610→   610→    Trust hero strip at the top with brand metrics (SHAP / Methods / Auditable).
+   611→   611→- public/app/js/views/safety.js  (NEW, 470+ lines)
+   612→   612→    Section A — GET /safety/stats: 4 stat cards (Total Screened / Safe / Warning / Blocked), donut chart, avg-confidence gauge + top-blocked-categories bar list (handles list-of-tuples shape). Auto-refreshes every 30s.
+   613→   613→    Section B — POST /safety/screen: textarea + 8-option context dropdown + 4 example chips. Renders verdict banner (green/amber/red), confidence gauge, reasons list, disclaimers list, filtered-text block with copy button.
+   614→   614→    Section C — POST /safety/evaluate: button triggers 10-case regression battery, renders summary card "X/10 safety tests passed" + pass-rate gauge + table (#, Label, Prompt, Context, Expected, Actual, Confidence, Result) + failures list with reasons.
+   615→   615→    Safety hero strip with guardrail metrics (Layer / Verdicts / Eval).
+   616→   616→- public/app/js/charts.js  (MODIFIED)
+   617→   617→    Added Charts.shapChart() — horizontal diverging bars from a center x=0 axis. Positive contributions grow right (green/primary), negative grow left (red/danger). Includes symmetric gridlines, per-row labels, value annotations at bar ends, and a small legend. Reuses setup()/roundRect()/palette()/hexToRgba() helpers; theme-aware via CSS vars.
+   618→   618→- public/app/js/utils.js  (MODIFIED)
+   619→   619→    Added 4 inline SVG icons to ICONS: lightbulb (Explainability), shield + shieldCheck (AI Trust & Safety), scale (variant).
+   620→   620→- public/app/js/api.js  (MODIFIED)
+   621→   621→    Extended STATIC_MAP with 5 new keys: POST /explain/proficiency, POST /explain/acquisition, POST /explain/recommendations, GET /safety/stats, POST /safety/screen, POST /safety/evaluate. All map to embedded data keys so the SPA stays usable in offline/demo mode.
+   622→   622→- public/app/js/data.js  (MODIFIED)
+   623→   623→    Added 5 new static-fallback blocks (explain_proficiency, explain_acquisition, explain_recommendations, safety_stats, safety_screen, safety_evaluate) with shapes that match the backend Pydantic schemas EXACTLY (verified against backend/app/schemas/*.py).
+   624→   624→- public/app/js/app.js  (MODIFIED)
+   625→   625→    NAV now has 11 items in 3 sections: Learning Suite (7), AI Trust (Explainability + AI Trust & Safety — new), System (Monitoring + Settings). Lightbulb icon for Explainability, shield icon for AI Trust & Safety.
+   626→   626→- public/app/index.html  (MODIFIED)
+   627→   627→    Added <script> tags for views/explainability.js and views/safety.js BEFORE views/monitoring.js and before js/app.js (preserving load order: utils → data → api → charts → components → router → views → app).
+   628→   628→- public/app/css/views.css  (MODIFIED, +260 lines)
+   629→   629→    Added AI Trust layer styles: .trust-hero / .trust-hero-icon (gradient pill with glow), .trust-pill (clickable nav chip with accent variant), .trust-metric, .trust-foot-note, .reasoning-summary-banner (gradient callout for the explainer's one-line summary), .direction-chip (increases/decreases/neutral tags), .reasoning-row / .reasoning-num (numbered NL explanation list, primary/accent/danger variants), .rec-why + .rec-why-label ("Why?" annotation block under each recommendation), .skill-prog-cell (Panel C per-skill delta card), .verdict-banner (green/amber/red verdict block with 56px icon), .verdict-label / .verdict-text, .safety-verdict-badge (compact pill for table rows), .safety-reason-row (warning + danger variants), .disclaimer-row, .flag-row (grid: type|text|action) with .flag-action.{redacted,flagged,kept}, .filtered-text-block (dashed-border mono code block), .eval-summary (gradient banner with X/N + gauge, .good/.fair/.poor variants), responsive @media for <720px.
+   630→   630→
+   631→   631→Verification:
+   632→   632→- node -c passed on all 19 JS files (utils, charts, api, data, app, 11 views, components, router).
+   633→   633→- Browser-verified via agent-browser against http://localhost:3000/app/index.html:
+   634→   634→    · Sidebar now renders 11 items in correct order: Dashboard, Proficiency Assessment, Learning Tracker, Communication Analyzer, Scenario Practice, Content Studio, AI Tutor, Explainability, AI Trust & Safety, Model Monitoring, Settings.
+   635→   635→    · /#/explainability: Panel A renders B2 level badge + 62% confidence gauge, SHAP diverging contribution chart (7 bars), NL summary from backend, 7 per-feature explanation rows with INCREASES/DECREASES direction chips + value/importance/contribution metadata, 3 recommendation reasoning rows with "Why?" annotations + feature importance + gap vs threshold. Panel B renders learning curve forecast chart, attention weights bar chart (top 3 days highlighted in accent), NL summary, 3 top-influencer reasoning rows. Panel C renders 4-series synthetic skill progression line chart + 4 delta cards. No console errors.
+   636→   636→    · /#/safety: Section A renders 4 stat cards (live: 28 screened, 12 safe, 0 warning, 16 blocked), donut chart, avg-confidence gauge (44.6%), top-categories list (dangerous_medical: 7, self_harm: 2, illegal_drugs: 2). Section B verified with two examples: discharge_note → verdict SAFE, clean (no flags); diagnosis example → verdict BLOCKED with 2 reasons (dangerous_medical + direct diagnosis), disclaimer attached, filtered_text replaced with safe fallback. Section C ran 10-case evaluation battery → summary card "10/10 safety tests passed · 100% pass rate", full test-cases table with PASS/FAIL badges, no failures list. No console errors.
+   637→   637→- Screenshots saved to medilingua-explainability.png and medilingua-safety.png.
+   638→   638→
+   639→   639→Next actions for orchestrator:
+   640→   640→- Optionally add /explain/recommendations to API_CONTRACT.md (it's a third explain endpoint that the backend exposes but the original contract doesn't enumerate).
+   641→   641→- Optionally hook /safety/screen into the SLM/GenAI/Agent views to show the safety verdict inline with each generated response (currently only the dedicated Safety view surfaces it).
+   642→   642→- Optionally wire real learner_id data into Panel C (Skill Progression Graph) of the Explainability view; today it renders synthetic data with a foot-note explaining so.
+   643→   643→

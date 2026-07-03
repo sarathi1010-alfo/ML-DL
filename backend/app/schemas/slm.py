@@ -30,6 +30,15 @@ class TerminologyItem(BaseModel):
     example: str
 
 
+class RagSourceRef(BaseModel):
+    """Reference to a RAG-retrieved knowledge chunk that grounded the generation."""
+    chunk_id: int
+    category: str = "general"
+    text: str
+    score: float
+    document_filename: str = ""
+
+
 class ScenarioResponse(BaseModel):
     scenario: str
     terminology: list[TerminologyItem]
@@ -37,6 +46,7 @@ class ScenarioResponse(BaseModel):
     model: str
     latency_ms: int
     safety: SafetyInfo | None = None
+    rag_sources: list[RagSourceRef] = Field(default_factory=list)
 
 
 class ExplainRequest(BaseModel):

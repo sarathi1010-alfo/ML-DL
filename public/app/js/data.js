@@ -423,6 +423,35 @@
         { label: 'Pure definition',                   text: 'Hypertension is defined as a persistently elevated blood pressure above 130/80 mmHg.',         context: 'education', expected: 'safe',     actual: 'safe',     confidence: 0.96, reasons: [],                                                       passed: true },
         { label: 'Educational with hedging',          text: 'Common symptoms of asthma may include wheezing, shortness of breath, and chest tightness. If you are experiencing these symptoms, please consult a healthcare professional.', context: 'education', expected: 'safe',     actual: 'safe',     confidence: 0.93, reasons: [],                                                       passed: true }
       ]
+    },
+
+    /* ---------- GET /rag/documents (Task ID 6) ----------
+       Matches RagDocumentsResponse.
+    */
+    rag_documents: {
+      documents: [
+        { id: 'seed_kb', filename: 'MediLingua Seed Knowledge Base', chunks: 59, uploaded_at: new Date(now.getTime() - 30 * 60000).toISOString(), source: 'seed' }
+      ],
+      total_documents: 1,
+      total_chunks: 59
+    },
+
+    /* ---------- POST /rag/query (Task ID 6) ----------
+       Matches RagQueryResponse. Returned when backend is offline so the
+       knowledge base UI is still demonstrable in demo mode.
+    */
+    rag_query: {
+      answer: 'Based on the medical communication knowledge base, when explaining a diagnosis to a patient, use plain-language explanations instead of medical jargon — say "heart attack" rather than "myocardial infarction," and "high blood pressure" rather than "hypertension." Aim for a 6th-to-8th grade reading level and confirm understanding using the teach-back method by asking the patient to summarize the plan in their own words. This content is for educational purposes only. Always consult a licensed medical professional for clinical decisions.',
+      sources: [
+        { chunk_id: 23, text: 'Plain-language explanations replace medical jargon with everyday words the patient can understand. Instead of \'myocardial infarction,\' say \'heart attack\'; instead of \'hypertension,\' say \'high blood pressure.\' Aim for a reading level around the 6th to 8th grade, and check comprehension using the teach-back method: ask the patient to explain the plan back to you in their own words.', score: 0.4321, rank: 1, document_id: 'seed_kb', document_filename: 'MediLingua Seed Knowledge Base', category: 'communication' },
+        { chunk_id: 30, text: 'Discharge instructions should be written in plain language at a 6th to 8th grade reading level and reviewed verbally with the patient before they leave. Include the diagnosis in simple terms, medications with dose and schedule, warning signs that should prompt return, follow-up appointments, and a contact number. Use teach-back to confirm understanding.', score: 0.4264, rank: 2, document_id: 'seed_kb', document_filename: 'MediLingua Seed Knowledge Base', category: 'documentation' },
+        { chunk_id: 29, text: 'A SOAP note organizes a clinical encounter into four sections: Subjective (the patient\'s reported history), Objective (examination findings and test results), Assessment (the differential and working diagnosis), and Plan (treatment, investigations, and follow-up). SOAP notes provide a clear, structured record that supports continuity of care and medicolegal documentation.', score: 0.4045, rank: 3, document_id: 'seed_kb', document_filename: 'MediLingua Seed Knowledge Base', category: 'documentation' }
+      ],
+      retrieval_confidence: 0.421,
+      chunks_used: 3,
+      latency_ms: 18,
+      model: 'TF-IDF + SVD(64) + FAISS IndexFlatIP',
+      llm_used: false
     }
 
   };
