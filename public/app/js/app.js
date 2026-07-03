@@ -7,7 +7,7 @@
   const API = window.API;
   const Router = window.Router;
 
-  // Single sidebar section per spec: 9 nav items + login (hidden when authed)
+  // Single sidebar section per spec: 11 nav items + login (hidden when authed)
   const NAV = [
     { section: 'Learning Suite', items: [
       { path: '/dashboard',   label: 'Dashboard',            icon: 'dashboard' },
@@ -17,6 +17,10 @@
       { path: '/scenario',    label: 'Scenario Practice',    icon: 'scenario' },
       { path: '/studio',      label: 'Content Studio',       icon: 'studio' },
       { path: '/tutor',       label: 'AI Tutor',             icon: 'tutor' },
+    ]},
+    { section: 'AI Trust', items: [
+      { path: '/explainability', label: 'Explainability',    icon: 'lightbulb' },
+      { path: '/safety',         label: 'AI Trust & Safety', icon: 'shield' },
     ]},
     { section: 'System', items: [
       { path: '/monitoring',  label: 'Model Monitoring',     icon: 'monitor' },

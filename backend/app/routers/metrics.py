@@ -12,6 +12,8 @@ from ..database import engine
 from ..services.metrics_service import metrics_service
 from ..services.model_registry import registry
 from ..services.llm_client import llm_client
+from ..services.safety_service import safety_service
+from ..services.explainability_service import explainability_service
 from ..schemas.metrics import (
     HealthResponse, MetricsResponse, ApiUsage, LatencyStats, ModelMetricOut,
     SystemStats, EndpointStat, TimeSeriesPoint,
@@ -69,6 +71,20 @@ def _model_metrics(db: Session) -> list[ModelMetricOut]:
         "SLM TinyLlama-Q4": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
         "GenAI LLM": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
         "Agent ReAct": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
+        # Safety Layer — deterministic guard; "accuracy" is the live evaluation pass-rate
+        # of the built-in safety test suite (computed lazily and cached).
+        "Safety Layer": {
+            "accuracy": safety_service._last_eval_pass_rate if hasattr(safety_service, "_last_eval_pass_rate") else 0.0,
+            "f1": 0.0,
+            "rmse": 0.0,
+        },
+        # Explainability — model-agnostic post-hoc explanations; "accuracy" maps to
+        # whether the underlying model's feature_importances_ was successfully loaded.
+        "Explainability": {
+            "accuracy": 1.0 if (registry._proficiency and registry._proficiency.feature_importances_ is not None) else 0.0,
+            "f1": 0.0,
+            "rmse": 0.0,
+        },
     }
     for name, info in base.items():
         calls = models_info.get(name, {}).get("calls", 0)

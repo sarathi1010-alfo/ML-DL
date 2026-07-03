@@ -28,7 +28,14 @@
     'POST /genai/case-study': 'genai_case',
     'POST /genai/quiz': 'genai_quiz',
     'POST /genai/simulation': 'genai_simulation',
-    'POST /agent/tutor': 'agent_tutor'
+    'POST /agent/tutor': 'agent_tutor',
+    // Explainability + Safety (Task ID 5)
+    'POST /explain/proficiency': 'explain_proficiency',
+    'POST /explain/acquisition': 'explain_acquisition',
+    'POST /explain/recommendations': 'explain_recommendations',
+    'GET /safety/stats': 'safety_stats',
+    'POST /safety/screen': 'safety_screen',
+    'POST /safety/evaluate': 'safety_evaluate'
   };
 
   function apiUrl(path) {

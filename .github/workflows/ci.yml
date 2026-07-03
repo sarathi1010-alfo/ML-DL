@@ -1,0 +1,149 @@
+# MediLingua CI/CD Pipeline
+# Runs on every push + PR to main. Validates backend (Python) + frontend (JS) + security.
+name: MediLingua CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Backend: lint, type-check, smoke-test APIs
+  # ─────────────────────────────────────────────
+  backend:
+    name: Backend (FastAPI)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff mypy httpx
+
+      - name: Lint (ruff)
+        run: ruff check app/ || true
+        continue-on-error: true
+
+      - name: Import smoke test
+        env:
+          PLATFORM_DATABASE_URL: "sqlite:///./data/test.db"
+          SECRET_KEY: "ci-test-secret"
+          LLM_SERVICE_URL: "http://localhost:3003"
+        run: |
+          python -c "from app.main import app; print('✅ FastAPI app imports OK')"
+          python -c "from app.services.safety_service import SafetyService; s=SafetyService(); r=s.screen('You have cancer'); print('✅ Safety layer:', r['verdict'])"
+          python -c "from app.services.explainability_service import ExplainabilityService; print('✅ Explainability imports OK')"
+
+      - name: Start backend + smoke-test endpoints
+        env:
+          PLATFORM_DATABASE_URL: "sqlite:///./data/test.db"
+          SECRET_KEY: "ci-test-secret"
+          LLM_SERVICE_URL: "http://localhost:3003"
+        run: |
+          python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 12
+          curl -sf http://localhost:8000/api/v1/health | python -c "import sys,json; d=json.load(sys.stdin); assert d['status']=='healthy'; print('✅ /health OK')"
+          curl -sf -X POST http://localhost:8000/api/v1/assess/proficiency \
+            -H "Content-Type: application/json" \
+            -d '{"vocabulary_score":78,"grammar_score":65,"fluency_score":72,"comprehension_score":80,"exercises_completed":45,"study_hours":120,"days_active":30,"specialty":"cardiology"}' \
+            | python -c "import sys,json; d=json.load(sys.stdin); assert d['level'] in ['A1','A2','B1','B2','C1','C2']; print('✅ /assess/proficiency OK — level', d['level'])"
+          curl -sf -X POST http://localhost:8000/api/v1/safety/evaluate \
+            -H "Content-Type: application/json" -d '{}' \
+            | python -c "import sys,json; d=json.load(sys.stdin); print('✅ Safety eval:', d.get('pass_rate',0), 'pass rate')"
+
+  # ─────────────────────────────────────────────
+  # Frontend: JS syntax + static asset checks
+  # ─────────────────────────────────────────────
+  frontend:
+    name: Frontend (HTML/CSS/JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: JS syntax check (all view files)
+        run: |
+          set -e
+          for f in public/app/js/*.js public/app/js/views/*.js; do
+            node -c "$f" || { echo "❌ Syntax error in $f"; exit 1; }
+          done
+          echo "✅ All JS files pass syntax check"
+
+      - name: Verify no external CDN dependencies
+        run: |
+          if grep -rE "https?://(unpkg|cdn|jsdelivr|esm\.sh)" public/app/ --include="*.html" --include="*.js"; then
+            echo "❌ Found external CDN dependency — frontend must be framework-free"
+            exit 1
+          fi
+          echo "✅ No external CDNs — pure HTML/CSS/JS confirmed"
+
+      - name: Verify no React/Vue/Tailwind/Bootstrap
+        run: |
+          if grep -riE "react|vue|angular|svelte|tailwind|bootstrap" public/app/js/ --include="*.js" | grep -vE "//|/\*|ReAct"; then
+            echo "❌ Found framework reference"
+            exit 1
+          fi
+          echo "✅ No frontend frameworks detected"
+
+  # ─────────────────────────────────────────────
+  # Security scan
+  # ─────────────────────────────────────────────
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for committed secrets
+        run: |
+          if grep -rE "ghp_[a-zA-Z0-9]{36}|gho_[a-zA-Z0-9]{36}|sk-[a-zA-Z0-9]{20}" . --include="*.py" --include="*.js" --include="*.ts" --include="*.json" --include="*.yml" --include="*.md" 2>/dev/null | grep -v ".git/"; then
+            echo "❌ Found committed API token"
+            exit 1
+          fi
+          echo "✅ No secrets detected"
+
+      - name: Check .env is not committed
+        run: |
+          if git ls-files | grep -E "^\.env$|^backend/\.env$"; then
+            echo "❌ .env file is tracked — should be gitignored"
+            exit 1
+          fi
+          echo "✅ .env not tracked"
+
+      - name: Python dependency audit (pip-audit)
+        run: |
+          pip install pip-audit
+          cd backend && pip-audit -r requirements.txt --strict || true
+        continue-on-error: true
+
+  # ─────────────────────────────────────────────
+  # Docker build validation
+  # ─────────────────────────────────────────────
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t medilingua-backend ./backend
+      - name: Build LLM service image
+        run: docker build -t medilingua-llm ./mini-services/llm-service
+      - name: Build frontend image
+        run: docker build -t medilingua-frontend -f frontend/Dockerfile .

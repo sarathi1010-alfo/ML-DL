@@ -9,6 +9,15 @@ DifficultyT = Literal["beginner", "intermediate", "advanced"]
 ScenarioTypeT = Literal["patient_consultation", "case_discussion", "emergency_response", "differential_diagnosis"]
 
 
+class SafetyInfo(BaseModel):
+    """Embedded safety screening result returned alongside SLM/GenAI/Agent responses."""
+    verdict: Literal["safe", "warning", "blocked"]
+    confidence: float
+    reasons: list[str] = Field(default_factory=list)
+    disclaimers: list[str] = Field(default_factory=list)
+    latency_ms: int
+
+
 class ScenarioRequest(BaseModel):
     specialty: SpecialtyT = "general"
     difficulty: DifficultyT = "intermediate"
@@ -27,6 +36,7 @@ class ScenarioResponse(BaseModel):
     questions: list[str]
     model: str
     latency_ms: int
+    safety: SafetyInfo | None = None
 
 
 class ExplainRequest(BaseModel):
@@ -41,6 +51,7 @@ class ExplainResponse(BaseModel):
     related_terms: list[str]
     model: str
     latency_ms: int
+    safety: SafetyInfo | None = None
 
 
 class ConverseRequest(BaseModel):
@@ -55,3 +66,4 @@ class ConverseResponse(BaseModel):
     suggestions: list[str]
     model: str
     latency_ms: int
+    safety: SafetyInfo | None = None

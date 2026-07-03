@@ -144,7 +144,14 @@
     chart: '<path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/>',
     eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
     clipboard: '<rect x="6" y="4" width="12" height="18" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 12h6M9 16h4"/>',
-    language: '<path d="M3 5h12M9 3v2c0 4-2 7-5 8"/><path d="M5 9c0 2 2 4 5 4"/><path d="M11 19l4-9 4 9"/><path d="M13.5 15h3"/>'
+    language: '<path d="M3 5h12M9 3v2c0 4-2 7-5 8"/><path d="M5 9c0 2 2 4 5 4"/><path d="M11 19l4-9 4 9"/><path d="M13.5 15h3"/>',
+    // Lightbulb (explainability)
+    lightbulb: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M15.09 14.09c.38-.38.74-.79 1.06-1.24a7.97 7.97 0 0 0 1.85-5.13A8 8 0 0 0 4 7.72a7.97 7.97 0 0 0 1.85 5.13c.32.45.68.86 1.06 1.24"/><path d="M9 14V8a3 3 0 0 1 6 0v6"/>',
+    // Shield (safety / trust)
+    shield: '<path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/>',
+    shieldCheck: '<path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3z"/><path d="M9 12l2 2 4-4"/>',
+    // Gauge/scale (for explainability icon variant)
+    scale: '<path d="M12 3v18"/><path d="M5 7h14"/><path d="m5 7-3 6h6l-3-6z"/><path d="m19 7-3 6h6l-3-6z"/><path d="M8 21h8"/>'
   };
 
   function icon(name, size = 18, stroke = 2) {

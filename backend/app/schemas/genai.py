@@ -9,6 +9,15 @@ DifficultyT = Literal["beginner", "intermediate", "advanced"]
 RoleT = Literal["patient", "clinician", "nurse", "specialist"]
 
 
+class SafetyInfo(BaseModel):
+    """Embedded safety screening result."""
+    verdict: Literal["safe", "warning", "blocked"]
+    confidence: float
+    reasons: list[str] = Field(default_factory=list)
+    disclaimers: list[str] = Field(default_factory=list)
+    latency_ms: int
+
+
 class CaseStudyRequest(BaseModel):
     specialty: SpecialtyT = "general"
     difficulty: DifficultyT = "intermediate"
@@ -20,6 +29,7 @@ class CaseStudyResponse(BaseModel):
     learning_objectives: list[str]
     model: str
     latency_ms: int
+    safety: SafetyInfo | None = None
 
 
 class QuizRequest(BaseModel):
@@ -40,6 +50,7 @@ class QuizResponse(BaseModel):
     questions: list[QuizQuestion]
     model: str
     latency_ms: int
+    safety: SafetyInfo | None = None
 
 
 class SimulationRequest(BaseModel):
@@ -51,3 +62,4 @@ class SimulationResponse(BaseModel):
     simulation: str
     model: str
     latency_ms: int
+    safety: SafetyInfo | None = None

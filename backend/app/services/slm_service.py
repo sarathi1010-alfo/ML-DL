@@ -11,6 +11,7 @@ from typing import Any
 
 from ..core.logging import logger
 from .llm_client import llm_client
+from .safety_service import safety_service
 
 
 SYSTEM_PROMPT = (
@@ -242,12 +243,27 @@ class SlmService:
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
         self._track_latency(latency_ms)
+        # Safety screening — screen the scenario text + terminology examples.
+        screened = safety_service.screen(scenario_text, context="slm")
+        scenario_text = screened["filtered_text"]
+        # Also screen each terminology example (lightweight)
+        for term_item in terminology:
+            ex_screen = safety_service.screen(term_item.get("example", ""), context="slm")
+            term_item["example"] = ex_screen["filtered_text"]
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
         return {
             "scenario": scenario_text.strip(),
             "terminology": terminology,
             "questions": questions,
             "model": self.model_name,
             "latency_ms": latency_ms,
+            "safety": safety_info,
         }
 
     def _parse_scenario_llm(self, text: str, specialty: str) -> tuple[str, list[dict], list[str]]:
@@ -357,6 +373,16 @@ class SlmService:
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
         self._track_latency(latency_ms)
+        # Safety screening — screen the explanation text
+        screened = safety_service.screen(explanation, context="slm")
+        explanation = screened["filtered_text"]
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
         return {
             "term": term,
             "explanation": explanation.strip(),
@@ -364,6 +390,7 @@ class SlmService:
             "related_terms": related,
             "model": self.model_name,
             "latency_ms": latency_ms,
+            "safety": safety_info,
         }
 
     def _parse_explain_llm(self, text: str, term: str) -> tuple[str, list[str], list[str]]:
@@ -436,12 +463,23 @@ class SlmService:
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
         self._track_latency(latency_ms)
+        # Safety screening — screen the conversational response
+        screened = safety_service.screen(response, context="slm")
+        response = screened["filtered_text"]
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
         return {
             "response": response.strip(),
             "corrections": corrections,
             "suggestions": suggestions,
             "model": self.model_name,
             "latency_ms": latency_ms,
+            "safety": safety_info,
         }
 
     def _parse_converse_llm(self, text: str) -> tuple[str, list[str], list[str]]:

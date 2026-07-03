@@ -7,9 +7,12 @@ from .genai import router as genai_router
 from .agent import router as agent_router
 from .metrics import router as metrics_router
 from .predictions import router as predictions_router
+from .safety import router as safety_router
+from .explainability import router as explainability_router
 
 __all__ = [
     "auth_router", "assess_router", "track_router", "analyze_router",
     "slm_router", "genai_router", "agent_router",
     "metrics_router", "predictions_router",
+    "safety_router", "explainability_router",
 ]

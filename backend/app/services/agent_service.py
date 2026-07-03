@@ -20,6 +20,7 @@ from typing import Any
 from ..core.logging import logger
 from .llm_client import llm_client
 from .proficiency_service import ProficiencyService, CEFR_LEVELS, RECOMMENDATIONS
+from .safety_service import safety_service
 
 
 SYSTEM_PROMPT = (
@@ -176,6 +177,17 @@ class TutorAgentService:
 
         total_latency_ms = int((time.perf_counter() - t0) * 1000)
 
+        # Safety screening — screen the LLM-composed final answer.
+        screened = safety_service.screen(final_answer, context="agent")
+        final_answer = screened["filtered_text"]
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
+
         # Persist agent log
         if db is not None:
             try:
@@ -206,6 +218,7 @@ class TutorAgentService:
             "final_answer": final_answer,
             "tools_used": tools_used,
             "total_latency_ms": total_latency_ms,
+            "safety": safety_info,
         }
 
     # ---------- tools ----------

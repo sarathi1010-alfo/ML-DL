@@ -8,6 +8,15 @@ SpecialtyT = Literal["cardiology", "neurology", "pediatrics", "emergency", "gene
 LevelT = Literal["A1", "A2", "B1", "B2", "C1", "C2"]
 
 
+class SafetyInfo(BaseModel):
+    """Embedded safety screening result."""
+    verdict: Literal["safe", "warning", "blocked"]
+    confidence: float
+    reasons: list[str] = Field(default_factory=list)
+    disclaimers: list[str] = Field(default_factory=list)
+    latency_ms: int
+
+
 class TutorRequest(BaseModel):
     learner_id: str = Field(..., min_length=1, max_length=64)
     task: str = Field(default="Design learning path", max_length=256)
@@ -42,6 +51,7 @@ class TutorResponse(BaseModel):
     final_answer: str
     tools_used: list[str]
     total_latency_ms: int
+    safety: SafetyInfo | None = None
 
 
 class AgentLogOut(BaseModel):

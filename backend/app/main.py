@@ -26,6 +26,7 @@ from .routers import (
     auth_router, assess_router, track_router, analyze_router,
     slm_router, genai_router, agent_router,
     metrics_router, predictions_router,
+    safety_router, explainability_router,
 )
 
 
@@ -85,6 +86,7 @@ for r in (
     auth_router, assess_router, track_router, analyze_router,
     slm_router, genai_router, agent_router,
     metrics_router, predictions_router,
+    safety_router, explainability_router,
 ):
     app.include_router(r, prefix=API_PREFIX)
 

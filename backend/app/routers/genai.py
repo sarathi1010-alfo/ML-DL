@@ -46,13 +46,14 @@ def case_study(
     result = registry.genai.generate_case_study(payload)
     metrics_service.record_model("GenAI LLM", (time.perf_counter() - t0) * 1000)
     _persist(db, user, "case_study", payload, result)
-    # Map to schema field name
+    # Map to schema field name; safety field is passed through automatically via **result
     return CaseStudyResponse(
         case_study=result["case_study"],
         questions=result["questions"],
         learning_objectives=result["learning_objectives"],
         model=result["model"],
         latency_ms=result["latency_ms"],
+        safety=result.get("safety"),
     )
 
 

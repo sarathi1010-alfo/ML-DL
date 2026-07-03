@@ -440,10 +440,105 @@
     }
   }
 
+  /* ---------------- SHAP / DIVERGING HORIZONTAL BARS ----------------
+     Horizontal bars diverging from a center line (x=0).
+     opts.items: [{label, value, value_label, color?}]
+     value > 0 → bar grows to the right (green by default)
+     value < 0 → bar grows to the left (red by default)
+  */
+  function shapChart(canvas, opts) {
+    const { ctx, w, h } = setup(canvas);
+    const p = palette();
+    const items = opts.items || [];
+    if (!items.length) return;
+    const padL = opts.labelWidth || 130, padR = opts.padR || 14, padT = opts.padT || 18, padB = opts.padB || 10;
+    const cw = w - padL - padR, ch = h - padT - padB;
+    const center = padL + cw / 2;
+
+    // max abs value for scaling (symmetric)
+    const maxAbs = Math.max(...items.map(i => Math.abs(i.value)), 0.0001);
+
+    // gridlines around the center
+    ctx.strokeStyle = p.grid;
+    ctx.lineWidth = 1;
+    ctx.font = '10px ' + cssVar('--font-mono', 'monospace');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const gridSteps = 4;
+    for (let i = -gridSteps; i <= gridSteps; i++) {
+      const x = center + (i / gridSteps) * (cw / 2);
+      ctx.globalAlpha = i === 0 ? 0.9 : 0.35;
+      ctx.beginPath();
+      ctx.moveTo(x, padT); ctx.lineTo(x, padT + ch);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      if (i !== 0) {
+        ctx.fillStyle = p.muted;
+        const val = (i / gridSteps) * maxAbs;
+        ctx.fillText(val.toFixed(2), x, padT + ch + 4);
+      }
+    }
+    // center axis label "0"
+    ctx.fillStyle = p.muted;
+    ctx.fillText('0', center, padT + ch + 4);
+
+    const rowH = ch / items.length;
+    const barH = Math.min(22, rowH * 0.6);
+
+    items.forEach((item, i) => {
+      const y = padT + i * rowH + rowH / 2;
+      // label
+      ctx.fillStyle = p.text;
+      ctx.font = '12px ' + cssVar('--font-sans', 'sans-serif');
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText(item.label, padL - 10, y);
+
+      const val = item.value;
+      const isPos = val >= 0;
+      const color = item.color || (isPos ? p.primary : p.danger);
+      const bw = (Math.abs(val) / maxAbs) * (cw / 2);
+      const x = isPos ? center : center - bw;
+
+      // bar with gradient
+      const grad = makeGradient(ctx, x, 0, x + bw, 0, [
+        [0, hexToRgba(color, 0.55)],
+        [1, color]
+      ]);
+      ctx.fillStyle = grad;
+      roundRect(ctx, x, y - barH / 2, bw, barH, Math.min(barH / 2, 6));
+      ctx.fill();
+
+      // subtle outline
+      ctx.strokeStyle = hexToRgba(color, 0.4);
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // value label at end of bar
+      ctx.fillStyle = p.text;
+      ctx.font = '600 11px ' + cssVar('--font-mono', 'monospace');
+      ctx.textAlign = isPos ? 'left' : 'right';
+      ctx.textBaseline = 'middle';
+      const label = item.value_label != null ? item.value_label : (val >= 0 ? '+' : '') + val.toFixed(3);
+      ctx.fillText(label, isPos ? x + bw + 5 : x - 5, y);
+    });
+
+    // legend (top-left)
+    if (opts.legend !== false) {
+      ctx.font = '10px ' + cssVar('--font-sans', 'sans-serif');
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = p.primary;
+      ctx.fillRect(padL, 4, 8, 8);
+      ctx.fillStyle = p.muted; ctx.fillText('increases level', padL + 12, 8);
+      ctx.fillStyle = p.danger;
+      ctx.fillRect(padL + 110, 4, 8, 8);
+      ctx.fillStyle = p.muted; ctx.fillText('decreases level', padL + 122, 8);
+    }
+  }
+
   Charts.lineChart = lineChart;
   Charts.areaChart = (canvas, opts) => lineChart(canvas, { ...opts, area: true });
   Charts.barChart = barChart;
   Charts.hbarChart = hbarChart;
+  Charts.shapChart = shapChart;
   Charts.donutChart = donutChart;
   Charts.sparkline = sparkline;
   Charts.gaugeChart = gaugeChart;

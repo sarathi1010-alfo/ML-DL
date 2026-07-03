@@ -12,6 +12,7 @@ from typing import Any
 
 from ..core.logging import logger
 from .llm_client import llm_client
+from .safety_service import safety_service
 
 
 SYSTEM_PROMPT = (
@@ -256,12 +257,23 @@ class GenaiService:
             objectives = _CASE_OBJECTIVES.get(specialty, _CASE_OBJECTIVES["general"])
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
+        # Safety screening — screen the case study text.
+        screened = safety_service.screen(case_text, context="genai")
+        case_text = screened["filtered_text"]
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
         return {
             "case_study": case_text.strip(),
             "questions": questions,
             "learning_objectives": objectives,
             "model": self.model_name,
             "latency_ms": latency_ms,
+            "safety": safety_info,
         }
 
     def _parse_case_llm(self, text: str, specialty: str) -> tuple[str, list[str], list[str]]:
@@ -331,10 +343,25 @@ class GenaiService:
             questions = _fallback_quiz(specialty, topic, num, difficulty)
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
+        # Safety screening — screen each quiz question's explanation.
+        for q in questions:
+            ex_screen = safety_service.screen(q.get("explanation", ""), context="genai")
+            q["explanation"] = ex_screen["filtered_text"].strip()
+        # Use the first question's verdict as a representative safety verdict
+        overall_text = " ".join(q.get("question", "") + " " + q.get("explanation", "") for q in questions)
+        screened = safety_service.screen(overall_text, context="genai")
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
         return {
             "questions": questions,
             "model": self.model_name,
             "latency_ms": latency_ms,
+            "safety": safety_info,
         }
 
     def _parse_quiz_json(self, text: str, num: int) -> list[dict]:
@@ -409,10 +436,21 @@ class GenaiService:
             sim_text = _fallback_simulation(specialty, role)
 
         latency_ms = int((time.perf_counter() - t0) * 1000)
+        # Safety screening — screen the simulation text.
+        screened = safety_service.screen(sim_text, context="genai")
+        sim_text = screened["filtered_text"]
+        safety_info = {
+            "verdict": screened["verdict"],
+            "confidence": screened["confidence"],
+            "reasons": screened["reasons"],
+            "disclaimers": screened["disclaimers"],
+            "latency_ms": screened["latency_ms"],
+        }
         return {
             "simulation": sim_text.strip(),
             "model": self.model_name,
             "latency_ms": latency_ms,
+            "safety": safety_info,
         }
 
     def _parse_simulation_llm(self, text: str) -> str:

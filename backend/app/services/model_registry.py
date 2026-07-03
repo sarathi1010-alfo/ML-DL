@@ -203,6 +203,23 @@ class ModelRegistry:
             _ = self.agent
         except Exception as e:
             logger.error(f"agent warm-up failed: {e}")
+        # Pre-run the safety test suite so the live pass-rate is available
+        # via /metrics/models immediately at startup.
+        try:
+            from .safety_service import safety_service
+            report = safety_service.evaluate()
+            logger.info(
+                f"Safety layer warmed up: {report['passed']}/{report['total']} "
+                f"test cases passed (pass_rate={report['pass_rate']:.2%})"
+            )
+        except Exception as e:
+            logger.error(f"safety warm-up failed: {e}")
+        # Pre-init explainability service (lazy loads feature importances)
+        try:
+            from .explainability_service import explainability_service
+            _ = explainability_service
+        except Exception as e:
+            logger.error(f"explainability warm-up failed: {e}")
 
     def status_map(self) -> dict[str, str]:
         return {
