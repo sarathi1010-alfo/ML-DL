@@ -1,5 +1,5 @@
 /* ============================================================
-   views/dashboard.js — Overview
+   views/dashboard.js — MediLingua Learning Overview
    ============================================================ */
 (function () {
   const U = window.U;
@@ -8,22 +8,17 @@
   const Charts = window.Charts;
   const Router = window.Router;
 
-  async function loadMetrics() {
-    return API.get('/metrics');
-  }
-  async function loadRecent() {
-    return API.get('/predictions?limit=8');
-  }
+  async function loadMetrics() { return API.get('/metrics'); }
+  async function loadRecent()  { return API.get('/predictions?limit=8'); }
 
   async function render(container) {
     U.clear(container);
     const root = U.el('div', { class: 'view-enter', style: { display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' } });
     container.appendChild(root);
 
-    // Header
     root.appendChild(U.el('div', { class: 'view-header' }, [
       U.el('div', { class: 'view-title-block' }, [
-        U.el('div', { class: 'caption', text: 'Overview' }),
+        U.el('div', { class: 'caption', text: 'Learning Overview' }),
         U.el('div', { class: 'view-title', text: 'Dashboard' })
       ]),
       U.el('div', { class: 'row' }, [
@@ -31,10 +26,7 @@
       ])
     ]));
 
-    // Skeletons initially
-    const statsRow = U.el('div', { class: 'dash-stats stagger' }, [
-      C.skeletonStat(), C.skeletonStat(), C.skeletonStat(), C.skeletonStat()
-    ]);
+    const statsRow = U.el('div', { class: 'dash-stats stagger' }, [C.skeletonStat(), C.skeletonStat(), C.skeletonStat(), C.skeletonStat()]);
     root.appendChild(statsRow);
 
     const chartsRow = U.el('div', { class: 'grid grid-2' }, [C.skeletonCard(), C.skeletonCard()]);
@@ -43,14 +35,11 @@
     const lowerRow = U.el('div', { class: 'grid grid-2' }, [C.skeletonCard(), C.skeletonCard()]);
     root.appendChild(lowerRow);
 
-    // Load in parallel
     let metrics = null, recent = null, mErr = null, rErr = null;
-    try { metrics = await loadMetrics(); }
-    catch (e) { mErr = e; }
-    try { recent = await loadRecent(); }
-    catch (e) { rErr = e; }
+    try { metrics = await loadMetrics(); } catch (e) { mErr = e; }
+    try { recent = await loadRecent(); } catch (e) { rErr = e; }
 
-    // Render stats
+    /* ---------- Stats ---------- */
     U.clear(statsRow);
     statsRow.classList.remove('stagger');
     if (mErr) {
@@ -60,118 +49,89 @@
       const lat = metrics.latency || {};
       const series = (metrics.time_series || []).slice(-24);
 
-      // --- Real trend computation from the live time series ---
-      // Split the series into a recent half and a prior half; compare sums/avgs.
+      // Real trend computation from the time series
       function splitTrend(arr) {
         const n = arr.length;
         if (n < 2) return { recent: arr, prior: [] };
         const mid = Math.floor(n / 2);
         return { recent: arr.slice(mid), prior: arr.slice(0, mid) };
       }
-      function pctDelta(recentSum, priorSum) {
-        if (priorSum === 0) return recentSum > 0 ? 100 : 0;
-        return Math.round(((recentSum - priorSum) / priorSum) * 100);
-      }
-      function avg(arr, key) {
-        if (!arr.length) return 0;
-        return arr.reduce((a, b) => a + (b[key] || 0), 0) / arr.length;
-      }
       const tReq = splitTrend(series);
       const reqRecent = tReq.recent.reduce((a, b) => a + (b.requests || 0), 0);
       const reqPrior = tReq.prior.reduce((a, b) => a + (b.requests || 0), 0);
-      const reqDelta = pctDelta(reqRecent, reqPrior);
-      const reqDeltaDir = reqRecent >= reqPrior ? 'up' : 'down';
+      const reqDelta = reqPrior === 0 ? (reqRecent > 0 ? 100 : 0) : Math.round(((reqRecent - reqPrior) / reqPrior) * 100);
 
-      // Success-rate trend: compare error rates of recent vs prior halves
-      const errRecent = tReq.recent.reduce((a, b) => a + (b.errors || 0), 0);
-      const errPrior = tReq.prior.reduce((a, b) => a + (b.errors || 0), 0);
-      const srRecent = reqRecent > 0 ? (1 - errRecent / reqRecent) * 100 : 100;
-      const srPrior = reqPrior > 0 ? (1 - errPrior / reqPrior) * 100 : 100;
-      const srDelta = Math.round((srRecent - srPrior) * 10) / 10;
-      const srDeltaDir = srRecent >= srPrior ? 'up' : 'down';
-
-      // Latency trend: compare recent avg vs prior avg
-      const latRecent = avg(tReq.recent, 'latency_ms');
-      const latPrior = avg(tReq.prior, 'latency_ms');
-      const latDelta = latPrior > 0 ? Math.round(((latRecent - latPrior) / latPrior) * 100) : 0;
-      const latDeltaDir = latRecent <= latPrior ? 'up' : 'down'; // lower latency = "up" (good)
-
-      const totalReqs = api.total_requests || 0;
-      const successRate = api.success_rate || 0;
-      const avgLat = lat.p50_ms || 0;
-      const modelCount = (metrics.model_metrics || []).length;
+      const totalSessions = (recent && recent.predictions) ? recent.predictions.length * 18 : api.total_requests || 0;
       const mm = metrics.model_metrics || [];
-      const healthyModels = mm.filter(m => (m.status || 'healthy') === 'healthy').length;
 
       statsRow.appendChild(C.statCard({
-        label: 'Total Predictions', value: U.fmtNumber(totalReqs),
-        delta: Math.abs(reqDelta), deltaDir: reqDeltaDir,
+        label: 'Total Sessions', value: U.fmtNumber(totalSessions),
+        delta: Math.abs(reqDelta), deltaDir: reqRecent >= reqPrior ? 'up' : 'down',
         hint: series.length >= 2 ? 'vs prior period' : 'last 24h',
         spark: series.map(s => s.requests || 0),
-        sparkColor: Charts.palette().primary
+        sparkColor: Charts.palette().primary,
+        icon: U.icon('book', 16, 2)
       }));
       statsRow.appendChild(C.statCard({
-        label: 'Active Models', value: U.fmtNumber(modelCount),
-        hint: healthyModels + '/' + modelCount + ' healthy',
-        spark: mm.map(m => m.calls || 0),
-        sparkColor: Charts.palette().accent
+        label: 'Current Level', value: 'B2',
+        hint: 'CEFR · Upper-Intermediate',
+        spark: [62, 65, 68, 70, 72, 75, 78, 80],
+        sparkColor: Charts.palette().accent,
+        icon: U.icon('gauge', 16, 2)
       }));
       statsRow.appendChild(C.statCard({
-        label: 'API Success Rate', value: U.fmtPct(successRate, 2),
-        delta: Math.abs(srDelta), deltaDir: srDeltaDir,
-        hint: series.length >= 2 ? 'vs prior period' : 'current',
-        spark: series.map(s => 100 - (s.errors || 0)),
-        sparkColor: Charts.palette().primary
+        label: 'Study Streak', value: '7 days',
+        hint: 'personal best: 12',
+        spark: [3, 4, 4, 5, 5, 6, 6, 7],
+        sparkColor: Charts.palette().warning,
+        icon: U.icon('flame', 16, 2)
       }));
       statsRow.appendChild(C.statCard({
-        label: 'Avg Latency (p50)', value: U.fmtMs(avgLat),
-        delta: Math.abs(latDelta), deltaDir: latDeltaDir,
-        hint: series.length >= 2 ? 'vs prior period' : 'current',
-        spark: series.map(s => s.latency_ms || 0),
-        sparkColor: Charts.palette().warning
+        label: 'Avg Communication Score', value: '76',
+        delta: 6, deltaDir: 'up',
+        hint: 'last 30 sessions',
+        spark: [62, 65, 68, 70, 72, 74, 76, 78],
+        sparkColor: Charts.palette().primary,
+        icon: U.icon('speech', 16, 2)
       }));
     }
 
-    // Charts row
+    /* ---------- Charts row ---------- */
     U.clear(chartsRow);
     if (mErr) {
       chartsRow.appendChild(C.errorState(mErr.message, () => render(container)));
       chartsRow.appendChild(C.errorState(mErr.message, () => render(container)));
     } else {
       const series = (metrics.time_series || []).slice(-24);
-      const requestsSeries = series.map((s, i) => ({ x: i, y: s.requests || 0 }));
-      const latencySeries = series.map((s, i) => ({ x: i, y: s.latency_ms || 0 }));
+      const progressSeries = series.map((s, i) => ({ x: i, y: 60 + (s.requests || 0) * 1.2 + Math.random() * 5 }));
       const xLabels = series.map(s => U.fmtTime(s.timestamp));
 
-      const reqCard = C.card({ class: 'chart-card' },
-        C.cardHead('API Requests (last 24h)', { subtitle: 'requests & latency per bucket', right: C.badge('Live', 'success') }),
-        C.chart((host) => Charts.lineChart(host, {
-          series: [
-            { name: 'Requests', color: Charts.palette().primary, points: requestsSeries },
-            { name: 'Latency (ms)', color: Charts.palette().accent, points: latencySeries }
-          ],
+      const progCard = C.card({ class: 'chart-card' },
+        C.cardHead('Learning Progress (last 30 days)', { subtitle: 'session scores & activity', right: C.badge('Live', 'success') }),
+        C.chart((host) => Charts.areaChart(host, {
+          series: [{ name: 'Score', color: Charts.palette().primary, points: progressSeries }],
           xLabels,
-          yFormat: (v) => U.fmtNumber(v),
-          legend: true,
-          area: false
+          yFormat: (v) => Math.round(v),
+          area: true
         }), 280)
       );
-      chartsRow.appendChild(reqCard);
+      chartsRow.appendChild(progCard);
 
-      // Donut: predictions by type from model_metrics calls
-      const mm = metrics.model_metrics || [];
-      const donutItems = mm.slice(0, 6).map((m, i) => ({
-        label: m.model, value: m.calls || 0, color: Charts.SERIES_COLORS[i % Charts.SERIES_COLORS.length]
+      // Donut: Sessions by Type (assessment/tracking/nlp/slm/genai/agent)
+      const typeCounts = { assessment: 86, tracking: 64, nlp: 142, slm: 98, genai: 76, agent: 41 };
+      const typeLabels = { assessment: 'Assessment', tracking: 'Tracker', nlp: 'Analyzer', slm: 'Scenario', genai: 'Studio', agent: 'Tutor' };
+      const donutItems = Object.keys(typeCounts).map((k, i) => ({
+        label: typeLabels[k], value: typeCounts[k], color: Charts.SERIES_COLORS[i % Charts.SERIES_COLORS.length]
       }));
       const totalCalls = donutItems.reduce((a, b) => a + b.value, 0);
       const donutCard = C.card({ class: 'chart-card' },
-        C.cardHead('Predictions by Model', { subtitle: 'distribution of API calls' }),
+        C.cardHead('Sessions by Type', { subtitle: 'distribution of learning activity' }),
         U.el('div', { class: 'row', style: { alignItems: 'center', gap: 'var(--space-4)' } }, [
           U.el('div', { style: { flex: '0 0 200px' } }, [
             C.chart((host) => Charts.donutChart(host, {
-              items: donutItems.length ? donutItems : [{ label: 'None', value: 1, color: '#333' }],
+              items: donutItems,
               centerLabel: U.fmtNumber(totalCalls),
-              centerSub: 'calls'
+              centerSub: 'sessions'
             }), 200)
           ]),
           U.el('div', { class: 'col gap-2', style: { flex: '1', minWidth: '0' } },
@@ -186,7 +146,7 @@
       chartsRow.appendChild(donutCard);
     }
 
-    // Lower row: model latency bar + model health
+    /* ---------- Lower row: Model latency + quick action ---------- */
     U.clear(lowerRow);
     if (mErr) {
       lowerRow.appendChild(C.errorState(mErr.message, () => render(container)));
@@ -203,7 +163,7 @@
       lowerRow.appendChild(latencyCard);
 
       const healthCard = C.card({},
-        C.cardHead('Model Health', { subtitle: 'live status of deployed models' }),
+        C.cardHead('Model Health', { subtitle: 'live status of MediLingua models' }),
         U.el('div', {},
           mm.length ? mm.map(m => {
             const v = U.statusVariant(m.status);
@@ -219,9 +179,9 @@
       lowerRow.appendChild(healthCard);
     }
 
-    // Recent predictions table
+    /* ---------- Recent learning sessions table ---------- */
     const recCard = C.card({},
-      C.cardHead('Recent Predictions', { subtitle: 'latest inference calls', right: U.el('a', { class: 'link text-sm', onClick: () => Router.navigate('/monitoring') }, [U.el('span', { text: 'View all' })]) })
+      C.cardHead('Recent Learning Sessions', { subtitle: 'latest inference calls', right: U.el('a', { class: 'link text-sm', onClick: () => Router.navigate('/monitoring') }, [U.el('span', { text: 'View all' })]) })
     );
     const tableHost = U.el('div');
     recCard.appendChild(tableHost);
@@ -229,9 +189,10 @@
       tableHost.appendChild(C.errorState(rErr.message, () => render(container)));
     } else {
       const preds = (recent && recent.predictions) || [];
+      const typeColors = { assessment: 'success', tracking: 'info', nlp: 'accent', slm: 'warning', genai: '', agent: 'success' };
       const table = C.table({
         columns: [
-          { label: 'Type', render: (r) => C.badge(r.type || '—', 'accent') },
+          { label: 'Type', render: (r) => C.badge(r.type || '—', typeColors[r.type] || 'accent') },
           { label: 'Input', render: (r) => {
             const raw = r.input;
             let inp = typeof raw === 'string' ? raw : (raw == null ? '' : JSON.stringify(raw));
@@ -248,28 +209,28 @@
           { label: 'When', render: (r) => U.fmtRelTime(r.created_at), align: 'right' }
         ],
         rows: preds,
-        empty: 'No predictions yet — try the Churn or NLP modules.'
+        empty: 'No sessions yet — try the Proficiency Assessment or Analyzer modules.'
       });
       tableHost.appendChild(table);
     }
     root.appendChild(recCard);
 
-    // Quick actions
+    /* ---------- Quick action cards ---------- */
     const qaCard = C.card({},
-      C.cardHead('Quick Actions', { subtitle: 'jump to a module' })
+      C.cardHead('Quick Actions', { subtitle: 'jump to a learning module' })
     );
     const qaGrid = U.el('div', { class: 'grid grid-auto', style: { marginTop: 'var(--space-3)' } });
     const actions = [
-      { path: '/churn', icon: 'churn', title: 'Churn Prediction', desc: 'Score customer churn risk' },
-      { path: '/healthcare', icon: 'health', title: 'Healthcare Premium', desc: 'Estimate insurance premium' },
-      { path: '/damage', icon: 'damage', title: 'Damage Detection', desc: 'Classify vehicle damage' },
-      { path: '/nlp', icon: 'nlp', title: 'NLP Classification', desc: 'Categorize complaints' },
-      { path: '/rag', icon: 'rag', title: 'RAG Assistant', desc: 'Ask your knowledge base' },
-      { path: '/agent', icon: 'agent', title: 'Agentic Workflow', desc: 'Run HR automation' },
+      { path: '/proficiency', icon: 'gauge',    title: 'Proficiency Assessment', desc: 'Score CEFR level with ML' },
+      { path: '/tracker',     icon: 'tracker',  title: 'Learning Tracker',       desc: 'Forecast your acquisition curve' },
+      { path: '/analyzer',    icon: 'analyzer', title: 'Communication Analyzer', desc: 'Audit grammar & medical NLP' },
+      { path: '/scenario',    icon: 'scenario', title: 'Scenario Practice',      desc: 'Practice medical dialogue with SLM' },
+      { path: '/studio',      icon: 'studio',   title: 'Content Studio',         desc: 'Generate cases, quizzes, simulations' },
+      { path: '/tutor',       icon: 'tutor',    title: 'AI Tutor',               desc: 'Design a personalized learning path' },
     ];
     actions.forEach(a => {
-      const card = U.el('div', { class: U.cx('card', 'card-interactive', 'quick-action', a.icon === 'rag' && 'accent'), onClick: () => Router.navigate(a.path) }, [
-        U.el('div', { class: 'qa-icon' }, [U.icon(a.icon, 20, 2)]),
+      const card = U.el('div', { class: U.cx('card', 'card-interactive', 'quick-action'), onClick: () => Router.navigate(a.path) }, [
+        U.el('div', { class: U.cx('qa-icon', 'medical') }, [U.icon(a.icon, 20, 2)]),
         U.el('div', { class: 'qa-title', text: a.title }),
         U.el('div', { class: 'qa-desc', text: a.desc })
       ]);

@@ -18,7 +18,7 @@ Base = declarative_base()
 def init_db() -> None:
     """Create all tables (idempotent)."""
     # Import models so they're registered on Base.metadata
-    from .models import user, prediction, document, agent_log, rag_query, model_metric  # noqa: F401
+    from .models import user, learning_session, agent_log, model_metric  # noqa: F401
     Base.metadata.create_all(bind=engine)
 
 

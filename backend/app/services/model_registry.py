@@ -1,8 +1,7 @@
 """Singleton lazy model loader + GPU detection + prediction cache.
 
-Each model is wrapped in a singleton service object trained on synthetic data on
-first access (or warmed up at startup). A small LRU dict caches predictions by
-hashed input to make repeated calls fast in the demo.
+Holds the MediLingua service instances (proficiency, acquisition, nlp, slm,
+genai, agent) and a shared LRU prediction cache.
 """
 from __future__ import annotations
 import hashlib
@@ -19,10 +18,6 @@ from ..core.logging import logger
 
 def _gpu_available() -> bool:
     """Best-effort GPU detection (we don't have torch — always False in sandbox)."""
-    try:
-        import numpy as np  # noqa: F401
-    except Exception:
-        pass
     try:
         import faiss
         if hasattr(faiss, "get_num_gpus"):
@@ -60,7 +55,6 @@ class _LRUCache:
 
 
 def hash_input(payload: Any) -> str:
-    """Stable hash for caching arbitrary JSON-serializable payloads."""
     try:
         import json
         s = json.dumps(payload, sort_keys=True, default=str)
@@ -96,13 +90,12 @@ class ModelRegistry:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._cache = _LRUCache(256)
-        self._churn = None
-        self._premium = None
-        self._damage = None
-        self._forecast = None
-        self._bert = None
-        self._rag = None
+        self._proficiency = None
+        self._acquisition = None
+        self._nlp = None
         self._slm = None
+        self._genai = None
+        self._agent = None
         self._loaded: dict[str, str] = {}
 
     # ---- cache helpers ----
@@ -114,83 +107,43 @@ class ModelRegistry:
 
     # ---- lazy accessors ----
     @property
-    def churn(self):
-        if self._churn is None:
+    def proficiency(self):
+        if self._proficiency is None:
             with self._lock:
-                if self._churn is None:
-                    from .churn_service import ChurnService
-                    logger.info("Training churn model...")
+                if self._proficiency is None:
+                    from .proficiency_service import ProficiencyService
+                    logger.info("Training proficiency model...")
                     t0 = time.perf_counter()
-                    self._churn = ChurnService()
-                    self._loaded["churn"] = "loaded"
-                    logger.info(f"Churn model ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
-        return self._churn
+                    self._proficiency = ProficiencyService()
+                    self._loaded["proficiency"] = "loaded"
+                    logger.info(f"Proficiency model ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
+        return self._proficiency
 
     @property
-    def premium(self):
-        if self._premium is None:
+    def acquisition(self):
+        if self._acquisition is None:
             with self._lock:
-                if self._premium is None:
-                    from .premium_service import PremiumService
-                    logger.info("Training premium model...")
+                if self._acquisition is None:
+                    from .acquisition_service import AcquisitionService
+                    logger.info("Training acquisition model...")
                     t0 = time.perf_counter()
-                    self._premium = PremiumService()
-                    self._loaded["premium"] = "loaded"
-                    logger.info(f"Premium model ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
-        return self._premium
+                    self._acquisition = AcquisitionService()
+                    self._loaded["acquisition"] = "loaded"
+                    logger.info(f"Acquisition model ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
+        return self._acquisition
 
     @property
-    def damage(self):
-        if self._damage is None:
+    def nlp(self):
+        if self._nlp is None:
             with self._lock:
-                if self._damage is None:
-                    from .damage_service import DamageService
-                    logger.info("Training damage model...")
+                if self._nlp is None:
+                    from .nlp_service import NlpService
+                    logger.info("Initializing NLP analyzer...")
                     t0 = time.perf_counter()
-                    self._damage = DamageService()
-                    self._loaded["damage"] = "loaded"
-                    logger.info(f"Damage model ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
-        return self._damage
-
-    @property
-    def forecast(self):
-        if self._forecast is None:
-            with self._lock:
-                if self._forecast is None:
-                    from .forecast_service import ForecastService
-                    logger.info("Training forecast model...")
-                    t0 = time.perf_counter()
-                    self._forecast = ForecastService()
-                    self._loaded["forecast"] = "loaded"
-                    logger.info(f"Forecast model ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
-        return self._forecast
-
-    @property
-    def bert(self):
-        if self._bert is None:
-            with self._lock:
-                if self._bert is None:
-                    from .bert_service import BertService
-                    logger.info("Training bert (TF-IDF + LogReg) model...")
-                    t0 = time.perf_counter()
-                    self._bert = BertService()
-                    self._loaded["bert"] = "loaded"
-                    logger.info(f"Bert proxy ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
-        return self._bert
-
-    @property
-    def rag(self):
-        if self._rag is None:
-            with self._lock:
-                if self._rag is None:
-                    from .rag_service import RagService
-                    logger.info("Initializing RAG service...")
-                    t0 = time.perf_counter()
-                    self._rag = RagService()
-                    self._rag.seed_default_knowledge_base()
-                    self._loaded["rag"] = "ready"
-                    logger.info(f"RAG ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
-        return self._rag
+                    self._nlp = NlpService()
+                    self._loaded["nlp"] = "loaded"
+                    logger.info(f"NLP analyzer ready ({(time.perf_counter()-t0)*1000:.0f}ms)")
+        return self._nlp
 
     @property
     def slm(self):
@@ -202,40 +155,64 @@ class ModelRegistry:
                     self._loaded["slm"] = "loaded"
         return self._slm
 
+    @property
+    def genai(self):
+        if self._genai is None:
+            with self._lock:
+                if self._genai is None:
+                    from .genai_service import GenaiService
+                    self._genai = GenaiService()
+                    self._loaded["genai"] = "loaded"
+        return self._genai
+
+    @property
+    def agent(self):
+        if self._agent is None:
+            with self._lock:
+                if self._agent is None:
+                    from .agent_service import TutorAgentService
+                    # Pass proficiency service to avoid re-training
+                    self._agent = TutorAgentService(proficiency=self.proficiency)
+                    self._loaded["agent"] = "ready"
+        return self._agent
+
     def warm_up(self) -> None:
-        """Pre-train the core models (churn, premium, bert, forecast, damage)."""
+        """Pre-train the core ML models (proficiency, acquisition, nlp)."""
         try:
-            _ = self.churn
+            _ = self.proficiency
         except Exception as e:
-            logger.error(f"churn warm-up failed: {e}")
+            logger.error(f"proficiency warm-up failed: {e}")
         try:
-            _ = self.premium
+            _ = self.acquisition
         except Exception as e:
-            logger.error(f"premium warm-up failed: {e}")
+            logger.error(f"acquisition warm-up failed: {e}")
         try:
-            _ = self.bert
+            _ = self.nlp
         except Exception as e:
-            logger.error(f"bert warm-up failed: {e}")
+            logger.error(f"nlp warm-up failed: {e}")
+        # Lightweight services — init lazily
         try:
-            _ = self.forecast
+            _ = self.slm
         except Exception as e:
-            logger.error(f"forecast warm-up failed: {e}")
+            logger.error(f"slm warm-up failed: {e}")
         try:
-            _ = self.damage
+            _ = self.genai
         except Exception as e:
-            logger.error(f"damage warm-up failed: {e}")
+            logger.error(f"genai warm-up failed: {e}")
+        try:
+            _ = self.agent
+        except Exception as e:
+            logger.error(f"agent warm-up failed: {e}")
 
     def status_map(self) -> dict[str, str]:
-        out = {
-            "churn": self._loaded.get("churn", "not_loaded"),
-            "premium": self._loaded.get("premium", "not_loaded"),
-            "damage": self._loaded.get("damage", "not_loaded"),
-            "forecast": self._loaded.get("forecast", "not_loaded"),
-            "bert": self._loaded.get("bert", "not_loaded"),
-            "rag": self._loaded.get("rag", "not_ready"),
+        return {
+            "proficiency": self._loaded.get("proficiency", "not_loaded"),
+            "acquisition": self._loaded.get("acquisition", "not_loaded"),
+            "nlp": self._loaded.get("nlp", "not_loaded"),
             "slm": self._loaded.get("slm", "not_loaded"),
+            "genai": self._loaded.get("genai", "not_loaded"),
+            "agent": self._loaded.get("agent", "not_ready"),
         }
-        return out
 
 
 registry = ModelRegistry()

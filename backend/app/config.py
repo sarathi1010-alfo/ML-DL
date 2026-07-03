@@ -12,8 +12,8 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 class Settings:
     """Plain settings object (no pydantic-settings, to avoid env-var clashes)."""
 
-    app_name: str = "AI Engineering Platform API"
-    app_version: str = "1.0.0"
+    app_name: str = "MediLingua API"
+    app_version: str = "2.0.0"
     log_level: str = os.getenv("LOG_LEVEL", "INFO")
     cors_origins: str = "*"
 

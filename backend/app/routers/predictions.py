@@ -1,4 +1,4 @@
-"""Predictions history + users router."""
+"""Learning-session history + users router."""
 from __future__ import annotations
 import json
 from datetime import datetime
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from ..deps import get_db, get_optional_user, get_current_user
 from ..models.user import User
-from ..models.prediction import Prediction
+from ..models.learning_session import LearningSession
 from ..schemas.metrics import PredictionOut, PredictionsResponse, UserStats
 
 router = APIRouter(prefix="", tags=["predictions", "users"])
@@ -19,10 +19,10 @@ def list_predictions(
     limit: int = Query(default=20, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
-    q = db.query(Prediction)
+    q = db.query(LearningSession)
     if type:
-        q = q.filter(Prediction.type == type)
-    rows = q.order_by(Prediction.id.desc()).limit(limit).all()
+        q = q.filter(LearningSession.type == type)
+    rows = q.order_by(LearningSession.id.desc()).limit(limit).all()
     out = []
     for r in rows:
         try:
@@ -48,15 +48,18 @@ def users_me(user: User = Depends(get_current_user)):
         "username": user.username,
         "email": user.email,
         "role": user.role,
+        "specialty": getattr(user, "specialty", "general"),
     }
 
 
 @router.get("/users/stats", response_model=UserStats)
 def users_stats(user: User = Depends(get_optional_user), db: Session = Depends(get_db)):
-    total = db.query(func.count(Prediction.id)).filter(Prediction.user_id == user.id).scalar() or 0
-    rows = db.query(Prediction.type, func.count(Prediction.id)).filter(Prediction.user_id == user.id).group_by(Prediction.type).all()
+    total = db.query(func.count(LearningSession.id)).filter(LearningSession.user_id == user.id).scalar() or 0
+    rows = db.query(LearningSession.type, func.count(LearningSession.id)).filter(
+        LearningSession.user_id == user.id
+    ).group_by(LearningSession.type).all()
     by_type = {t: c for t, c in rows}
-    last = db.query(func.max(Prediction.created_at)).filter(Prediction.user_id == user.id).scalar()
+    last = db.query(func.max(LearningSession.created_at)).filter(LearningSession.user_id == user.id).scalar()
     return UserStats(
         total_predictions=int(total),
         by_type=by_type,

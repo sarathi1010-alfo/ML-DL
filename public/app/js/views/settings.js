@@ -1,11 +1,12 @@
 /* ============================================================
-   views/settings.js — Settings & profile
+   views/settings.js — MediLingua Settings & Profile
+   Theme toggle, profile (from /auth/me), API config, clear local
+   data, about section.
    ============================================================ */
 (function () {
   const U = window.U;
   const API = window.API;
   const C = window.C;
-  const App = window.App;
 
   async function render(container) {
     U.clear(container);
@@ -19,14 +20,13 @@
       ])
     ]));
 
-    // Profile card
+    /* ---------- Profile ---------- */
     const profileCard = C.card({});
-    profileCard.appendChild(C.cardHead('Profile', { subtitle: 'your account information' }));
+    profileCard.appendChild(C.cardHead('Profile', { subtitle: 'your MediLingua account' }));
     const profileHost = U.el('div', { style: { marginTop: 'var(--space-3)' } });
     profileCard.appendChild(profileHost);
     root.appendChild(profileCard);
 
-    // Load profile
     profileHost.appendChild(C.loadingBlock('Loading profile…'));
     let user = API.getUser();
     try {
@@ -37,15 +37,18 @@
     profileHost.appendChild(U.el('div', { class: 'row gap-4' }, [
       U.el('div', { class: 'avatar lg accent', text: (user && (user.username || 'U')[0].toUpperCase()) || 'U' }),
       U.el('div', { class: 'col', style: { gap: '2px' } }, [
-        U.el('div', { style: { fontSize: 'var(--font-size-lg)', fontWeight: 700 }, text: (user && user.username) || 'Demo User' }),
-        U.el('div', { class: 'text-sm text-muted', text: (user && user.email) || 'demo@ai-platform.local' }),
-        U.el('div', { class: 'row gap-2', style: { marginTop: '4px' } }, [C.badge((user && user.role) || 'demo', 'accent')])
+        U.el('div', { style: { fontSize: 'var(--font-size-lg)', fontWeight: 700 }, text: (user && user.username) || 'Demo Learner' }),
+        U.el('div', { class: 'text-sm text-muted', text: (user && user.email) || 'demo@medilingua.local' }),
+        U.el('div', { class: 'row gap-2', style: { marginTop: '4px' } }, [
+          C.badge((user && user.role) || 'demo', 'accent'),
+          user && user.specialty && C.badge(user.specialty, 'success')
+        ])
       ])
     ]));
 
-    // Appearance
+    /* ---------- Appearance ---------- */
     const themeCard = C.card({});
-    themeCard.appendChild(C.cardHead('Appearance', { subtitle: 'customize how the platform looks' }));
+    themeCard.appendChild(C.cardHead('Appearance', { subtitle: 'customize how MediLingua looks' }));
     const themeHost = U.el('div', { style: { marginTop: 'var(--space-3)' } });
     themeCard.appendChild(themeHost);
     root.appendChild(themeCard);
@@ -54,7 +57,15 @@
       U.clear(themeHost);
       const theme = (window.App && window.App.getTheme) ? window.App.getTheme() : (document.documentElement.getAttribute('data-theme') || 'dark');
       const toggle = U.el('div', { class: 'toggle', role: 'switch', 'aria-checked': String(theme === 'light'), tabindex: '0' });
-      const doToggle = () => { if (window.App && window.App.toggleTheme) window.App.toggleTheme(); else { const cur = document.documentElement.getAttribute('data-theme') || 'dark'; document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark'); try { localStorage.setItem('aiplatform_theme', cur === 'dark' ? 'light' : 'dark'); } catch (e) {} } renderThemeRow(); };
+      const doToggle = () => {
+        if (window.App && window.App.toggleTheme) window.App.toggleTheme();
+        else {
+          const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+          document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+          try { localStorage.setItem('medilingua_theme', cur === 'dark' ? 'light' : 'dark'); } catch (e) {}
+        }
+        renderThemeRow();
+      };
       toggle.addEventListener('click', doToggle);
       toggle.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); doToggle(); } });
       themeHost.appendChild(U.el('div', { class: 'settings-row' }, [
@@ -70,10 +81,10 @@
       ]));
 
       // Auto-refresh toggle
-      const auto = localStorage.getItem('aiplatform_autorefresh') !== 'off';
+      const auto = localStorage.getItem('medilingua_autorefresh') !== 'off';
       const autoToggle = U.el('div', { class: 'toggle', role: 'switch', 'aria-checked': String(auto), tabindex: '0' });
       function setAuto(v) {
-        localStorage.setItem('aiplatform_autorefresh', v ? 'on' : 'off');
+        localStorage.setItem('medilingua_autorefresh', v ? 'on' : 'off');
         autoToggle.setAttribute('aria-checked', String(v));
       }
       autoToggle.addEventListener('click', () => setAuto(autoToggle.getAttribute('aria-checked') !== 'true'));
@@ -88,18 +99,18 @@
     }
     renderThemeRow();
 
-    // API config
+    /* ---------- API config ---------- */
     const apiCard = C.card({});
     apiCard.appendChild(C.cardHead('API Configuration', { subtitle: 'read-only backend details' }));
     apiCard.appendChild(U.el('div', { style: { marginTop: 'var(--space-3)' } }, [
-      settingsRow('Base URL', '/api/v1'),
-      settingsRow('Gateway', '?XTransformPort=8000'),
+      settingsRow('Base URL', '/papi/v1'),
+      settingsRow('Proxy', 'Next.js route handler → FastAPI :8000'),
       settingsRow('Version', 'v1.0.0'),
       settingsRow('Auth Token', API.isLoggedIn() ? 'Bearer ••••••••' : 'Not signed in (demo mode)')
     ]));
     root.appendChild(apiCard);
 
-    // Data
+    /* ---------- Local data ---------- */
     const dataCard = C.card({});
     dataCard.appendChild(C.cardHead('Local Data', { subtitle: 'manage browser-side data' }));
     const clearBtn = U.el('button', { class: 'btn btn-danger' }, [U.icon('trash', 16, 2), 'Clear local data']);
@@ -111,8 +122,8 @@
         danger: true,
         onConfirm: () => {
           API.clearAuth();
-          localStorage.removeItem('aiplatform_theme');
-          localStorage.removeItem('aiplatform_autorefresh');
+          localStorage.removeItem('medilingua_theme');
+          localStorage.removeItem('medilingua_autorefresh');
           C.toastSuccess('Local data cleared.');
           setTimeout(() => location.reload(), 600);
         }
@@ -124,15 +135,16 @@
     ]));
     root.appendChild(dataCard);
 
-    // About
+    /* ---------- About ---------- */
     const aboutCard = C.card({});
     aboutCard.appendChild(C.cardHead('About', { subtitle: 'tech stack & version' }));
     aboutCard.appendChild(U.el('div', { style: { marginTop: 'var(--space-3)' } }, [
-      settingsRow('Platform', 'AI Engineering Platform'),
+      settingsRow('Platform', 'MediLingua — Medical Language Learning'),
+      settingsRow('Tagline', 'Personalized Language Learning for Medical Professionals'),
       settingsRow('Version', 'v1.0.0'),
-      settingsRow('Frontend', 'HTML5 + CSS3 + Vanilla JS'),
+      settingsRow('Frontend', 'HTML5 + CSS3 + Vanilla JavaScript'),
       settingsRow('Backend', 'FastAPI · Python 3.12'),
-      settingsRow('Models', 'XGBoost · LightGBM · TF-IDF+LogReg · FAISS · TinyLlama'),
+      settingsRow('Models', 'RandomForest + XGB · Attention-LSTM · spaCy · TinyLlama · GPT-4o-mini · ReAct'),
       settingsRow('LLM Service', 'Node + z-ai-web-dev-sdk (port 3003)')
     ]));
     root.appendChild(aboutCard);

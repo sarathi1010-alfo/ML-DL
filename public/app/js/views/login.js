@@ -1,6 +1,5 @@
 /* ============================================================
-   views/login.js — Login page (overlay)
-   Renders an overlay that covers the whole viewport.
+   views/login.js — MediLingua login (overlay)
    ============================================================ */
 (function () {
   const U = window.U;
@@ -8,7 +7,6 @@
   const C = window.C;
   const Router = window.Router;
 
-  // If already logged in, redirect to dashboard
   function maybeRedirect() {
     if (API.isLoggedIn()) {
       Router.navigate('/dashboard');
@@ -25,11 +23,11 @@
       U.el('div', { class: 'login-grid' }),
       U.el('div', { class: 'login-card' }, [
         U.el('div', { class: 'login-brand' }, [
-          U.el('img', { src: '/app/assets/logo.svg', class: 'logo', alt: 'logo' }),
-          U.el('h1', { text: 'AI Engineering Platform' }),
-          U.el('p', { text: 'Sign in to your workspace' })
+          U.el('img', { src: '/app/assets/logo.svg', class: 'logo', alt: 'MediLingua logo' }),
+          U.el('h1', { text: 'MediLingua' }),
+          U.el('p', { text: 'Personalized Language Learning for Medical Professionals' })
         ]),
-        buildForm(view)
+        buildForm()
       ])
     ]);
     container.appendChild(view);
@@ -69,7 +67,7 @@
           if (res.access_token) {
             API.setToken(res.access_token);
             API.setUser(res.user || { username, role: 'admin' });
-            C.toastSuccess('Welcome back, ' + (res.user?.username || username));
+            C.toastSuccess('Welcome to MediLingua, ' + (res.user?.username || username));
             Router.navigate('/dashboard');
           } else {
             throw { message: 'No access token returned' };
@@ -87,9 +85,7 @@
       return form;
     }
 
-    return {
-      dispose() { /* router clears #view, nothing else needed */ }
-    };
+    return { dispose() {} };
   }
 
   window.Views = window.Views || {};

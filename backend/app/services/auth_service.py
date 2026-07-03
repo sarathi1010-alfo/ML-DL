@@ -32,6 +32,7 @@ def register_user(db: Session, req: RegisterRequest) -> tuple[User, str]:
         email=req.email,
         hashed_password=hash_password(req.password),
         role="user",
+        specialty=getattr(req, "specialty", None) or "general",
         is_active=True,
         created_at=datetime.utcnow(),
     )
@@ -61,6 +62,7 @@ def seed_admin(db: Session) -> None:
             email=settings.admin_email,
             hashed_password=hash_password(settings.admin_password),
             role="admin",
+            specialty="general",
             is_active=True,
             created_at=datetime.utcnow(),
         )

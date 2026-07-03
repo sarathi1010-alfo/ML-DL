@@ -1,5 +1,7 @@
 /* ============================================================
-   views/monitoring.js — Model monitoring
+   views/monitoring.js — MediLingua Model Monitoring
+   System health, API usage, latency p50/p95/p99, error rate,
+   per-model table, endpoints table, auto-refresh every 15s.
    ============================================================ */
 (function () {
   const U = window.U;
@@ -25,31 +27,22 @@
       ])
     ]));
 
-    // Stats row
-    const statsRow = U.el('div', { class: 'dash-stats' }, [
-      C.skeletonStat(), C.skeletonStat(), C.skeletonStat(), C.skeletonStat()
-    ]);
+    const statsRow = U.el('div', { class: 'dash-stats' }, [C.skeletonStat(), C.skeletonStat(), C.skeletonStat(), C.skeletonStat()]);
     root.appendChild(statsRow);
 
-    // Charts row
     const chartsRow = U.el('div', { class: 'grid grid-3' }, [C.skeletonCard(), C.skeletonCard(), C.skeletonCard()]);
     root.appendChild(chartsRow);
 
-    // Tables row
     const tablesRow = U.el('div', { class: 'grid grid-2' }, [C.skeletonCard(), C.skeletonCard()]);
     root.appendChild(tablesRow);
 
-    let lastData = null;
-
     async function load(isRefresh) {
-      if (isRefresh) {
-        C.toastInfo('Refreshing metrics…');
-      }
+      if (isRefresh) C.toastInfo('Refreshing metrics…');
       try {
         const data = await API.get('/metrics');
-        lastData = data;
         renderAll(data);
-        document.getElementById('mon-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        const upd = document.getElementById('mon-updated');
+        if (upd) upd.textContent = 'Updated ' + new Date().toLocaleTimeString();
       } catch (e) {
         U.clear(statsRow);
         statsRow.appendChild(C.errorState(e.message || 'Failed to load metrics', () => load(true)));
@@ -61,31 +54,34 @@
       const api = m.api_usage || {};
       const lat = m.latency || {};
       const sys = m.system || {};
+      const series = (m.time_series || []).slice(-24);
 
       // Stats
       U.clear(statsRow);
+      const reqDelta = series.length >= 2 ? Math.round(((series.slice(-12).reduce((a, b) => a + (b.requests || 0), 0) - series.slice(0, 12).reduce((a, b) => a + (b.requests || 0), 0)) / Math.max(1, series.slice(0, 12).reduce((a, b) => a + (b.requests || 0), 0))) * 100) : 0;
       statsRow.appendChild(C.statCard({
         label: 'Total Requests', value: U.fmtNumber(api.total_requests),
-        delta: 5, deltaDir: 'up', spark: U.fakeSeries(12, 10, 30)
+        delta: Math.abs(reqDelta), deltaDir: reqDelta >= 0 ? 'up' : 'down',
+        spark: series.map(s => s.requests || 0)
       }));
       statsRow.appendChild(C.statCard({
-        label: 'Requests / min', value: U.fmtNumber(api.requests_per_min),
-        delta: 2, deltaDir: 'up', spark: U.fakeSeries(12, 5, 25),
+        label: 'Requests / min', value: U.fmtNumber(api.requests_per_min, 2),
+        spark: series.map(s => s.requests || 0),
         sparkColor: Charts.palette().accent
       }));
       statsRow.appendChild(C.statCard({
         label: 'Success Rate', value: U.fmtPct(api.success_rate, 2),
-        delta: 0.1, deltaDir: 'up', spark: U.fakeSeries(12, 95, 100)
+        spark: series.map(s => 100 - (s.errors || 0) * 10),
+        sparkColor: Charts.palette().primary
       }));
       statsRow.appendChild(C.statCard({
-        label: 'Error Rate', value: U.fmtPct(m.error_rate, 2),
-        delta: -0.05, deltaDir: 'down', spark: U.fakeSeries(12, 0, 5),
+        label: 'Error Rate', value: U.fmtPct(m.error_rate, 3),
+        spark: series.map(s => (s.errors || 0)),
         sparkColor: Charts.palette().danger
       }));
 
       // Charts
       U.clear(chartsRow);
-      // System health
       chartsRow.appendChild(C.card({ class: 'chart-card' },
         C.cardHead('System Health', { subtitle: 'CPU · Memory · Disk' }),
         U.el('div', { class: 'col gap-3', style: { padding: 'var(--space-2)' } }, [
@@ -94,7 +90,6 @@
           healthBar('Disk', sys.disk_percent, 'warning')
         ])
       ));
-      // Latency chart
       chartsRow.appendChild(C.card({ class: 'chart-card' },
         C.cardHead('Latency Percentiles', { subtitle: 'p50 · p95 · p99 (ms)' }),
         C.chart((host) => Charts.barChart(host, {
@@ -104,11 +99,10 @@
           yFormat: (v) => v.toFixed(0) + 'ms'
         }), 220)
       ));
-      // Error rate gauge
       chartsRow.appendChild(C.card({ class: 'chart-card' },
         C.cardHead('Error Rate', { subtitle: 'live gauge' }),
         C.chart((host) => Charts.gaugeChart(host, m.error_rate || 0, {
-          label: U.fmtPct(m.error_rate || 0, 2),
+          label: U.fmtPct(m.error_rate || 0, 3),
           sub: 'error rate',
           thresholds: { high: 0.05, med: 0.02 },
           colors: { high: Charts.palette().danger, med: Charts.palette().warning, low: Charts.palette().primary }
@@ -124,8 +118,9 @@
           C.table({
             columns: [
               { label: 'Model', key: 'model' },
-              { label: 'Accuracy', render: r => U.fmtPct(r.accuracy, 2), align: 'right', mono: true },
-              { label: 'F1', render: r => r.f1 != null ? r.f1.toFixed(2) : '—', align: 'right', mono: true },
+              { label: 'Accuracy', render: r => r.accuracy ? U.fmtPct(r.accuracy, 2) : '—', align: 'right', mono: true },
+              { label: 'F1', render: r => r.f1 ? r.f1.toFixed(2) : '—', align: 'right', mono: true },
+              { label: 'RMSE', render: r => r.rmse ? r.rmse.toFixed(2) : '—', align: 'right', mono: true },
               { label: 'Latency', render: r => U.fmtMs(r.latency_ms), align: 'right', mono: true },
               { label: 'Calls', render: r => U.fmtNumber(r.calls), align: 'right', mono: true },
               { label: 'Status', render: r => C.badge(r.status, U.statusVariant(r.status)) }
@@ -166,7 +161,6 @@
     }
 
     load(false);
-    // Auto-refresh every 15s
     if (refreshTimer) clearInterval(refreshTimer);
     refreshTimer = setInterval(() => load(false), 15000);
 

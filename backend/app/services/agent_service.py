@@ -1,350 +1,406 @@
-"""Agent service — ReAct loop with 4 tools + LLM reasoning + rule-based fallback."""
+"""Tutor Agent service — Level 6 (Agentic AI).
+
+Guided ReAct loop with 5 tools:
+  1. assess_proficiency     — calls proficiency_service
+  2. recommend_content      — recommends exercises based on weakest areas
+  3. generate_exercise      — calls LLM to generate a practice exercise
+  4. schedule_practice      — creates a weekly study schedule
+  5. set_milestones         — sets learning milestones
+
+LLM generates per-step thoughts + a final summary. Falls back to templated
+thoughts when LLM is unavailable.
+"""
 from __future__ import annotations
-import json
-import time
 import asyncio
+import json
 import re
-from datetime import datetime
+import time
 from typing import Any
 
 from ..core.logging import logger
 from .llm_client import llm_client
-from ..database import SessionLocal
-from ..models.agent_log import AgentLog
+from .proficiency_service import ProficiencyService, CEFR_LEVELS, RECOMMENDATIONS
 
 
-# Tools available to the agent
-TOOLS = ["query_knowledge_base", "create_employee", "generate_access", "send_email"]
-
-_EMP_SEQ = 1024
-_MAIL_SEQ = 8821
-
-
-def _next_emp_id() -> str:
-    global _EMP_SEQ
-    _EMP_SEQ += 1
-    return f"EMP-{_EMP_SEQ}"
+SYSTEM_PROMPT = (
+    "You are MediLingua-Tutor, an agentic language-learning coach for medical professionals. "
+    "You design personalized learning paths by calling tools in sequence and composing a clear "
+    "final summary. Always be encouraging, clinically relevant, and practical."
+)
 
 
-def _next_mail_id() -> str:
-    global _MAIL_SEQ
-    _MAIL_SEQ += 1
-    return f"MAIL-{_MAIL_SEQ}"
+class TutorAgentService:
+    """Singleton tutor agent."""
 
+    def __init__(self, proficiency: ProficiencyService | None = None) -> None:
+        self._proficiency = proficiency
 
-def tool_query_knowledge_base(action_input: Any) -> str:
-    query = action_input if isinstance(action_input, str) else json.dumps(action_input)
-    # Use the registry's rag service (already initialized)
-    from .model_registry import registry
-    rag = registry.rag
-    sources = rag.retrieve(query, top_k=2)
-    if not sources:
-        return "No relevant knowledge base entries found."
-    return " ".join([s["text"] for s in sources])
+    @property
+    def proficiency(self) -> ProficiencyService:
+        if self._proficiency is None:
+            self._proficiency = ProficiencyService()
+        return self._proficiency
 
+    # ---------- public ----------
+    def run(self, payload: dict, db=None) -> dict:
+        t0 = time.perf_counter()
+        learner_id = payload.get("learner_id", "L001")
+        task = payload.get("task", "Design learning path")
+        current_level = payload.get("current_level", "B1")
+        target_level = payload.get("target_level", "C1")
+        specialty = payload.get("specialty", "general")
 
-def tool_create_employee(action_input: Any) -> str:
-    """Create a deterministic employee record. action_input may be a dict with name/role."""
-    if isinstance(action_input, dict):
-        name = action_input.get("name") or action_input.get("employee_name") or "Unknown"
-        role = action_input.get("role") or "Employee"
-    else:
-        name = str(action_input)
-        role = "Employee"
-    emp_id = _next_emp_id()
-    return f"Employee {emp_id} created for {name} ({role})."
+        scores = {
+            "vocabulary_score": float(payload.get("vocabulary_score", 70)),
+            "grammar_score": float(payload.get("grammar_score", 70)),
+            "fluency_score": float(payload.get("fluency_score", 70)),
+            "comprehension_score": float(payload.get("comprehension_score", 70)),
+            "exercises_completed": float(payload.get("exercises_completed", 30)),
+            "study_hours": float(payload.get("study_hours", 60)),
+            "days_active": float(payload.get("days_active", 20)),
+            "specialty": specialty,
+        }
 
+        steps: list[dict] = []
+        tools_used: list[str] = []
+        step_no = 0
 
-def tool_generate_access(action_input: Any) -> str:
-    if isinstance(action_input, dict):
-        name = action_input.get("name") or action_input.get("employee_name") or "Unknown"
-        role = action_input.get("role") or "Employee"
-    else:
-        name = str(action_input)
-        role = "Employee"
-    access = ["SSO", "Git", "Jira", "Email"]
-    return f"Access provisioned for {name} ({role}): {', '.join(access)}."
+        # Step 1: assess_proficiency
+        step_no += 1
+        t1 = time.perf_counter()
+        prof_result = self.proficiency.predict(scores)
+        observation_1 = (
+            f"Predicted CEFR level: {prof_result['level']} (numeric {prof_result['level_numeric']}); "
+            f"confidence {prof_result['confidence']:.2f}. "
+            f"Top weakness areas: "
+            + ", ".join(r["area"] for r in prof_result["recommendations"][:2])
+            + "."
+        )
+        steps.append({
+            "step": step_no,
+            "thought": self._thought_for_step(step_no, current_level, target_level, specialty, prof_result),
+            "action": "assess_proficiency",
+            "action_input": {"scores": scores, "current_level": current_level},
+            "observation": observation_1,
+            "latency_ms": int((time.perf_counter() - t1) * 1000),
+        })
+        tools_used.append("assess_proficiency")
 
+        # Step 2: recommend_content
+        step_no += 1
+        t1 = time.perf_counter()
+        rec_content = self._tool_recommend_content(prof_result, specialty)
+        observation_2 = (
+            f"Recommended {len(rec_content['items'])} content items focused on "
+            f"{rec_content['focus_areas']}: " +
+            "; ".join(f"{it['title']} ({it['type']}, {it['difficulty']})" for it in rec_content["items"])
+            + "."
+        )
+        steps.append({
+            "step": step_no,
+            "thought": self._thought_for_step(step_no, current_level, target_level, specialty, prof_result, rec_content),
+            "action": "recommend_content",
+            "action_input": {"current_level": prof_result["level"], "focus_areas": rec_content["focus_areas"]},
+            "observation": observation_2,
+            "latency_ms": int((time.perf_counter() - t1) * 1000),
+        })
+        tools_used.append("recommend_content")
 
-def tool_send_email(action_input: Any) -> str:
-    if isinstance(action_input, dict):
-        to = action_input.get("to") or action_input.get("email") or "employee@company.com"
-        subject = action_input.get("subject") or "Welcome to the team"
-    else:
-        to = "employee@company.com"
-        subject = "Welcome to the team"
-    mail_id = _next_mail_id()
-    return f"Email queued (ID {mail_id}) to={to} subject='{subject}'."
+        # Step 3: generate_exercise
+        step_no += 1
+        t1 = time.perf_counter()
+        exercise = self._tool_generate_exercise(prof_result, specialty, target_level)
+        observation_3 = (
+            f"Generated exercise: '{exercise['title']}' ({exercise['type']}, {exercise['difficulty']}). "
+            f"Focus: {exercise['focus']}. Estimated time: {exercise['estimated_minutes']} min."
+        )
+        steps.append({
+            "step": step_no,
+            "thought": self._thought_for_step(step_no, current_level, target_level, specialty, prof_result, exercise=exercise),
+            "action": "generate_exercise",
+            "action_input": {"focus_area": exercise["focus"], "type": exercise["type"], "level": prof_result["level"]},
+            "observation": observation_3,
+            "latency_ms": int((time.perf_counter() - t1) * 1000),
+        })
+        tools_used.append("generate_exercise")
 
+        # Step 4: schedule_practice
+        step_no += 1
+        t1 = time.perf_counter()
+        schedule = self._tool_schedule_practice(prof_result, target_level, scores)
+        observation_4 = (
+            f"Created {len(schedule['weekly_slots'])}-session weekly schedule. "
+            f"Total study commitment: {schedule['weekly_minutes']} min/week. "
+            f"Estimated days to reach {target_level}: {schedule['estimated_days']}."
+        )
+        steps.append({
+            "step": step_no,
+            "thought": self._thought_for_step(step_no, current_level, target_level, specialty, prof_result, schedule=schedule),
+            "action": "schedule_practice",
+            "action_input": {"weekly_minutes": schedule["weekly_minutes"], "estimated_days": schedule["estimated_days"]},
+            "observation": observation_4,
+            "latency_ms": int((time.perf_counter() - t1) * 1000),
+        })
+        tools_used.append("schedule_practice")
 
-TOOL_FUNCS = {
-    "query_knowledge_base": tool_query_knowledge_base,
-    "create_employee": tool_create_employee,
-    "generate_access": tool_generate_access,
-    "send_email": tool_send_email,
-}
+        # Step 5: set_milestones
+        step_no += 1
+        t1 = time.perf_counter()
+        milestones = self._tool_set_milestones(prof_result["level"], target_level, schedule["estimated_days"])
+        observation_5 = (
+            f"Set {len(milestones['milestones'])} milestones: " +
+            "; ".join(f"Week {m['week']} — {m['goal']} ({m['assessment']})" for m in milestones["milestones"])
+            + "."
+        )
+        steps.append({
+            "step": step_no,
+            "thought": self._thought_for_step(step_no, current_level, target_level, specialty, prof_result, milestones=milestones, final=True),
+            "action": "set_milestones",
+            "action_input": {"milestones_count": len(milestones["milestones"]), "final_level": target_level},
+            "observation": observation_5,
+            "latency_ms": int((time.perf_counter() - t1) * 1000),
+        })
+        tools_used.append("set_milestones")
 
+        # Final answer
+        final_answer = self._compose_final_answer(
+            learner_id, current_level, target_level, specialty,
+            prof_result, rec_content, exercise, schedule, milestones,
+        )
 
-def _build_employee_email(name: str) -> str:
-    if not name:
-        return "employee@company.com"
-    parts = name.lower().replace(".", " ").split()
-    if len(parts) >= 2:
-        return f"{parts[0]}.{parts[-1]}@company.com"
-    return f"{parts[0]}@company.com" if parts else "employee@company.com"
+        learning_path = {
+            "total_steps": len(steps),
+            "estimated_days": schedule["estimated_days"],
+            "focus_areas": rec_content["focus_areas"],
+        }
 
+        total_latency_ms = int((time.perf_counter() - t0) * 1000)
 
-def _rule_based_plan(task: str, employee_name: str | None, role: str | None, department: str | None) -> list[tuple[str, Any, str]]:
-    """Return [(thought, action, action_input)] in a sensible order."""
-    name = employee_name or "New Employee"
-    role_ = role or "Employee"
-    email = _build_employee_email(name)
-    return [
-        (f"Need to check onboarding policy for the task: {task}", "query_knowledge_base", "onboarding policy"),
-        (f"Create employee record for {name} as {role_}", "create_employee", {"name": name, "role": role_}),
-        (f"Provision access for {name} ({role_})", "generate_access", {"name": name, "role": role_}),
-        (f"Send welcome email to {name} at {email}", "send_email", {"to": email, "subject": "Welcome to the team"}),
-    ]
+        # Persist agent log
+        if db is not None:
+            try:
+                from ..models.agent_log import AgentLog
+                from datetime import datetime
+                log = AgentLog(
+                    learner_id=learner_id,
+                    task=task,
+                    current_level=current_level,
+                    target_level=target_level,
+                    specialty=specialty,
+                    steps_count=len(steps),
+                    status="completed",
+                    total_latency_ms=total_latency_ms,
+                    steps=json.dumps(steps, default=str),
+                    final_answer=final_answer,
+                    created_at=datetime.utcnow(),
+                )
+                db.add(log)
+                db.commit()
+            except Exception as e:
+                logger.warning(f"Failed to persist agent log: {e}")
 
+        return {
+            "status": "completed",
+            "learning_path": learning_path,
+            "steps": steps,
+            "final_answer": final_answer,
+            "tools_used": tools_used,
+            "total_latency_ms": total_latency_ms,
+        }
 
-def _parse_llm_step(text: str) -> tuple[str, str, Any] | None:
-    """Parse JSON {thought, action, action_input} from the LLM response. Returns None on failure."""
-    if not text:
-        return None
-    # Try direct JSON parse first
-    try:
-        # Strip code fences if present
-        cleaned = text.strip()
-        if cleaned.startswith("```"):
-            cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
-            cleaned = re.sub(r"\s*```$", "", cleaned)
-        # Find first { and last }
-        start = cleaned.find("{")
-        end = cleaned.rfind("}")
-        if start >= 0 and end > start:
-            obj = json.loads(cleaned[start:end + 1])
-            thought = obj.get("thought", "")
-            action = obj.get("action", "")
-            action_input = obj.get("action_input")
-            return thought, action, action_input
-    except Exception:
-        pass
-    # Fallback: try regex
-    thought_m = re.search(r"[Tt]hought\s*[:\-]\s*(.+?)(?=\n[Aa]ction|$)", text, re.DOTALL)
-    action_m = re.search(r"[Aa]ction\s*[:\-]\s*\"?([A-Za-z_]+)\"?", text)
-    input_m = re.search(r"[Aa]ction[_ ]?[Ii]nput\s*[:\-]\s*(.+?)(?=\n|$)", text, re.DOTALL)
-    if action_m:
-        thought = thought_m.group(1).strip() if thought_m else ""
-        action = action_m.group(1).strip()
-        action_input = input_m.group(1).strip() if input_m else ""
-        # Try to parse action_input as JSON
+    # ---------- tools ----------
+    def _tool_recommend_content(self, prof_result: dict, specialty: str) -> dict:
+        recs = prof_result.get("recommendations", [])
+        # Top 2 focus areas (lowercased)
+        focus_areas = [r["area"].lower() for r in recs[:2]]
+        items: list[dict] = []
+        type_map = {"grammar": "grammar drills", "vocabulary": "terminology cards",
+                    "fluency": "role-play", "comprehension": "case reading",
+                    "study habits": "study skills"}
+        difficulty = "intermediate" if prof_result["level_numeric"] <= 4 else "advanced"
+        for area in focus_areas:
+            items.append({
+                "title": f"{area.title()} for {specialty.title()} — Module {len(items) + 1}",
+                "type": type_map.get(area, "exercise"),
+                "difficulty": difficulty,
+                "duration_min": 25,
+            })
+        if not focus_areas:
+            focus_areas = ["vocabulary", "grammar"]
+            items = [{
+                "title": f"Foundational {specialty.title()} Vocabulary",
+                "type": "terminology cards", "difficulty": "beginner", "duration_min": 20,
+            }]
+        return {"focus_areas": focus_areas, "items": items}
+
+    def _tool_generate_exercise(self, prof_result: dict, specialty: str, target_level: str) -> dict:
+        recs = prof_result.get("recommendations", [])
+        focus = recs[0]["area"].lower() if recs else "grammar"
+        title = f"{specialty.title()} {focus.title()} Practice — CEFR {target_level}"
+        ex_type = "fill-in-the-blank" if focus == "grammar" else "role-play" if focus == "fluency" else "case-based discussion"
+        difficulty = "intermediate" if prof_result["level_numeric"] <= 4 else "advanced"
+        # Try LLM for a richer exercise title
         try:
-            action_input = json.loads(action_input)
+            prompt = (
+                f"In one short sentence, design a {focus} practice exercise for a "
+                f"{specialty} learner at CEFR {prof_result['level']} working toward {target_level}. "
+                f"Return only the exercise title."
+            )
+            llm_resp = asyncio.run(llm_client.chat(prompt, system=SYSTEM_PROMPT, max_tokens=80))
+            if llm_resp and 5 < len(llm_resp) < 200:
+                llm_resp = llm_resp.strip().strip("\"'.").strip()
+                title = llm_resp[:200]
         except Exception:
             pass
-        return thought, action, action_input
-    return None
+        return {
+            "title": title,
+            "type": ex_type,
+            "difficulty": difficulty,
+            "focus": focus,
+            "estimated_minutes": 20,
+        }
 
+    def _tool_schedule_practice(self, prof_result: dict, target_level: str, scores: dict) -> dict:
+        # Days to next level: heuristic
+        current_n = prof_result["level_numeric"]
+        target_n = CEFR_LEVELS.index(target_level) + 1 if target_level in CEFR_LEVELS else 5
+        gap = max(1, target_n - current_n)
+        # Base 30 days per gap, scaled by study habits
+        study_factor = 1.0
+        if scores.get("study_hours", 0) > 100:
+            study_factor = 0.8
+        elif scores.get("days_active", 0) < 20:
+            study_factor = 1.2
+        estimated_days = int(30 * gap * study_factor)
+        weekly_slots = [
+            {"day": "Mon", "minutes": 30, "focus": "grammar"},
+            {"day": "Wed", "minutes": 30, "focus": "vocabulary"},
+            {"day": "Fri", "minutes": 45, "focus": "fluency (role-play)"},
+            {"day": "Sat", "minutes": 30, "focus": "comprehension"},
+        ]
+        weekly_minutes = sum(s["minutes"] for s in weekly_slots)
+        return {"weekly_slots": weekly_slots, "weekly_minutes": weekly_minutes, "estimated_days": estimated_days}
 
-async def _llm_step(task: str, history: list[dict], available_tools: list[str]) -> tuple[str, str, Any] | None:
-    """Ask the LLM for the next step. Returns None if unavailable / unparseable."""
-    if not llm_client.is_available():
-        return None
-    history_str = "\n".join([
-        f"Step {h['step']}: thought='{h['thought']}' action='{h['action']}' observation='{h['observation'][:200]}'"
-        for h in history
-    ]) or "(none)"
-    prompt = (
-        f"You are a ReAct agent. Task: {task}\n\n"
-        f"Available tools: {available_tools}\n"
-        "- query_knowledge_base(action_input: string query)\n"
-        "- create_employee(action_input: {{name, role}})\n"
-        "- generate_access(action_input: {{name, role}})\n"
-        "- send_email(action_input: {{to, subject}})\n"
-        "When done, output action='FINAL_ANSWER' and action_input=your final summary string.\n\n"
-        f"Prior steps:\n{history_str}\n\n"
-        "Output STRICT JSON only: {\"thought\": str, \"action\": str, \"action_input\": any}."
-    )
-    try:
-        resp = await llm_client.chat(prompt, system="You are a precise ReAct planner. Always output strict JSON.", max_tokens=300)
-    except Exception:
-        return None
-    return _parse_llm_step(resp)
+    def _tool_set_milestones(self, current_level: str, target_level: str, estimated_days: int) -> dict:
+        current_n = CEFR_LEVELS.index(current_level) + 1 if current_level in CEFR_LEVELS else 3
+        target_n = CEFR_LEVELS.index(target_level) + 1 if target_level in CEFR_LEVELS else 5
+        milestones: list[dict] = []
+        weeks_total = max(4, estimated_days // 7)
+        for i, level_n in enumerate(range(current_n + 1, target_n + 1)):
+            week = max(1, int(weeks_total * (i + 1) / max(1, (target_n - current_n))))
+            milestones.append({
+                "week": week,
+                "goal": f"Reach {CEFR_LEVELS[level_n - 1]} proficiency",
+                "assessment": f"Formal CEFR {CEFR_LEVELS[level_n - 1]} mock exam + tutor evaluation",
+            })
+        if not milestones:
+            milestones.append({
+                "week": weeks_total,
+                "goal": f"Maintain {target_level} proficiency",
+                "assessment": "End-of-program comprehensive exam",
+            })
+        return {"milestones": milestones}
 
-
-def _coerce_action_input(action: str, action_input: Any, ctx: dict) -> Any:
-    """Fill in defaults for tool calls using context (name/role/email)."""
-    name = ctx.get("employee_name") or "New Employee"
-    role = ctx.get("role") or "Employee"
-    email = _build_employee_email(name)
-    if action == "create_employee":
-        if isinstance(action_input, dict):
-            return {"name": action_input.get("name", name), "role": action_input.get("role", role)}
-        return {"name": name, "role": role}
-    if action == "generate_access":
-        if isinstance(action_input, dict):
-            return {"name": action_input.get("name", name), "role": action_input.get("role", role)}
-        return {"name": name, "role": role}
-    if action == "send_email":
-        if isinstance(action_input, dict):
-            return {
-                "to": action_input.get("to", email),
-                "subject": action_input.get("subject", "Welcome to the team"),
-            }
-        return {"to": email, "subject": "Welcome to the team"}
-    if action == "query_knowledge_base":
-        if not isinstance(action_input, str) or not action_input:
-            return "onboarding policy"
-        return action_input
-    return action_input
-
-
-async def _llm_thought(task: str, step_num: int, total: int, action: str, action_desc: str, prior_obs: str) -> str:
-    """Ask the LLM for a concise ReAct thought for the upcoming action. Falls back to action_desc."""
-    if not llm_client.is_available():
-        return action_desc
-    prompt = (
-        f"You are a ReAct HR onboarding agent about to execute step {step_num} of {total}.\n"
-        f"Overall task: {task}\n"
-        f"Next action: {action} — {action_desc}\n"
-        f"Recent observations: {prior_obs[:300]}\n\n"
-        f"Write ONE concise sentence (max 22 words) explaining WHY this action is needed now. "
-        f"Reason in first person. Do not mention you are an AI. Output only the thought sentence."
-    )
-    try:
-        t = await llm_client.chat(prompt, system="You are a precise planning assistant. Be very concise.", max_tokens=70)
-        t = (t or "").strip().strip('"').strip("'").strip()
-        # Take only the first sentence to keep it tight
-        if t:
-            first = t.split(".")[0].strip()
-            if first and len(first) < 300:
-                return first + "."
-        return action_desc
-    except Exception:
-        return action_desc
-
-
-async def _llm_final_summary(task: str, employee_name: str | None, steps: list[dict]) -> str:
-    """Ask the LLM to compose a concise final confirmation summary."""
-    if not llm_client.is_available():
-        return ""
-    steps_str = "\n".join([f"- {s['action']}: {str(s['observation'])[:140]}" for s in steps])
-    prompt = (
-        f"You are an HR onboarding agent. The task '{task}' for employee '{employee_name or 'new hire'}' is complete.\n"
-        f"Steps completed:\n{steps_str}\n\n"
-        f"Write a concise (2-3 sentence) confirmation summary of what was accomplished. Mention the employee name."
-    )
-    try:
-        s = await llm_client.chat(prompt, system="You are a concise summarizer.", max_tokens=120)
-        s = (s or "").strip()
-        if s:
-            return s
-    except Exception:
-        pass
-    return ""
-
-
-# Short human descriptions for each tool, used to prompt the LLM for a thought.
-_ACTION_DESCS = {
-    "query_knowledge_base": "Look up the relevant onboarding policy in the knowledge base",
-    "create_employee": "Create the employee record in the HR system",
-    "generate_access": "Provision IT access (SSO, Git, Jira, corporate email)",
-    "send_email": "Send the welcome email to the new employee",
-}
-
-
-async def run_agent(task: str, employee_name: str | None = None, role: str | None = None, department: str | None = None) -> dict:
-    """Run a guided ReAct loop: a guaranteed-complete tool sequence with LLM-generated
-    thoughts for each step and an LLM-composed final summary. Falls back to templated
-    thoughts/summary if the LLM service is unavailable. This ensures every onboarding
-    runs all four tools and produces a coherent, multi-step trace."""
-    t0 = time.perf_counter()
-    ctx = {"employee_name": employee_name, "role": role, "department": department}
-    rule_plan = _rule_based_plan(task, employee_name, role, department)
-    total = len(rule_plan)
-    history: list[dict] = []
-    tools_used: list[str] = []
-
-    for i, (default_thought, action, action_input) in enumerate(rule_plan, start=1):
-        step_t0 = time.perf_counter()
-        prior_obs = " | ".join([h["observation"] for h in history]) or "(start of workflow)"
-        thought = await _llm_thought(
-            task, i, total, action,
-            _ACTION_DESCS.get(action, default_thought), prior_obs,
-        )
-        action_input = _coerce_action_input(action, action_input, ctx)
+    # ---------- thoughts (LLM with templated fallback) ----------
+    def _thought_for_step(self, step: int, current: str, target: str, specialty: str,
+                          prof_result: dict, rec_content: dict | None = None,
+                          exercise: dict | None = None, schedule: dict | None = None,
+                          milestones: dict | None = None, final: bool = False) -> str:
+        templates = {
+            1: (f"Learner {specialty} wants to progress from {current} to {target}. I'll first assess their "
+                f"current proficiency to identify strengths and weaknesses."),
+            2: (f"Proficiency is {prof_result['level']} (confidence {prof_result['confidence']:.2f}). "
+                f"Now I'll recommend targeted content based on the weakest areas."),
+            3: (f"Content plan ready. Next I'll generate a specific practice exercise aligned with the focus areas "
+                f"and the learner's current level."),
+            4: (f"Exercise ready. Now I'll build a realistic weekly practice schedule that fits the learner's "
+                f"available time and projects days-to-mastery."),
+            5: (f"Schedule set. Finally I'll establish measurable milestones so the learner can track progress "
+                f"toward {target}."),
+        }
+        fallback = templates.get(step, f"Executing step {step}.")
+        # Try LLM for a richer thought (short)
         try:
-            observation = TOOL_FUNCS[action](action_input)
-        except Exception as e:
-            observation = f"Tool error: {e}"
-        if action not in tools_used:
-            tools_used.append(action)
-        latency_ms = int((time.perf_counter() - step_t0) * 1000)
-        history.append({
-            "step": i,
-            "thought": thought,
-            "action": action,
-            "action_input": action_input,
-            "observation": observation,
-            "latency_ms": latency_ms,
-        })
+            ctx = (
+                f"Learner: {specialty} specialist, CEFR {current} → target {target}. "
+                f"Current assessment: level {prof_result['level']} (confidence {prof_result['confidence']:.2f}). "
+            )
+            if rec_content:
+                ctx += f"Focus areas identified: {', '.join(rec_content['focus_areas'])}. "
+            if exercise:
+                ctx += f"Exercise generated: {exercise['title']}. "
+            if schedule:
+                ctx += f"Schedule: {schedule['weekly_minutes']} min/week, ~{schedule['estimated_days']} days to target. "
+            if milestones:
+                ctx += f"Milestones: {len(milestones['milestones'])} set. "
+            prompt = (
+                f"{ctx}\nAs MediLingua-Tutor, write ONE short thought (max 2 sentences) for step {step} of a "
+                f"ReAct learning-path plan. Be specific and action-oriented. Return only the thought."
+            )
+            llm_resp = asyncio.run(llm_client.chat(prompt, system=SYSTEM_PROMPT, max_tokens=80))
+            if llm_resp and 10 < len(llm_resp) < 300:
+                return llm_resp.strip().strip("\"'").strip()
+        except Exception:
+            pass
+        return fallback
 
-    final_answer = await _llm_final_summary(task, employee_name, history)
-    if not final_answer:
-        name = employee_name or "the new employee"
-        final_answer = (
-            f"Onboarding for {name} is complete. Knowledge base consulted, employee record created, "
-            f"IT access provisioned, and welcome email sent."
+    # ---------- final answer (LLM with templated fallback) ----------
+    def _compose_final_answer(self, learner_id: str, current: str, target: str, specialty: str,
+                              prof_result: dict, rec_content: dict, exercise: dict,
+                              schedule: dict, milestones: dict) -> str:
+        focus_list = ", ".join(rec_content["focus_areas"])
+        mil_list = "; ".join(f"Week {m['week']}: {m['goal']}" for m in milestones["milestones"])
+        fallback = (
+            f"Personalized learning path designed for {learner_id} ({specialty}): "
+            f"current CEFR {prof_result['level']} → target {target}. "
+            f"Focus areas: {focus_list}. "
+            f"Recommended content: {len(rec_content['items'])} module(s) including '{exercise['title']}'. "
+            f"Practice schedule: {schedule['weekly_minutes']} min/week across {len(schedule['weekly_slots'])} sessions — "
+            f"estimated {schedule['estimated_days']} days to reach {target}. "
+            f"Milestones: {mil_list}. "
+            f"Recommend weekly tutor review and quarterly re-assessment."
         )
+        try:
+            prompt = (
+                f"Compose a concise, encouraging final summary (3-5 sentences) for learner {learner_id} "
+                f"({specialty}) who is moving from CEFR {prof_result['level']} to {target}. "
+                f"Include: focus areas ({focus_list}), key content ({exercise['title']}), "
+                f"practice commitment ({schedule['weekly_minutes']} min/week for {schedule['estimated_days']} days), "
+                f"and milestone structure. Return only the summary."
+            )
+            llm_resp = asyncio.run(llm_client.chat(prompt, system=SYSTEM_PROMPT, max_tokens=200))
+            if llm_resp and 50 < len(llm_resp) < 800:
+                return llm_resp.strip()
+        except Exception:
+            pass
+        return fallback
 
-    total_latency_ms = int((time.perf_counter() - t0) * 1000)
-
-    # Persist to DB
-    try:
-        db = SessionLocal()
-        log = AgentLog(
-            task=task,
-            employee_name=employee_name,
-            role=role,
-            department=department,
-            steps_count=len(history),
-            status="completed",
-            total_latency_ms=total_latency_ms,
-            steps=json.dumps(history),
-            created_at=datetime.utcnow(),
-        )
-        db.add(log)
-        db.commit()
-        db.close()
-    except Exception as e:
-        logger.error(f"Failed to persist agent log: {e}")
-
-    return {
-        "status": "completed",
-        "final_answer": final_answer,
-        "steps": history,
-        "tools_used": tools_used,
-        "total_latency_ms": total_latency_ms,
-    }
-
-
-def list_logs(limit: int = 50) -> list[dict]:
-    try:
-        db = SessionLocal()
-        rows = db.query(AgentLog).order_by(AgentLog.id.desc()).limit(limit).all()
+    # ---------- logs ----------
+    def list_logs(self, db, limit: int = 20) -> dict:
+        from ..models.agent_log import AgentLog
+        from sqlalchemy import select, func
+        total = db.execute(select(func.count(AgentLog.id))).scalar() or 0
+        rows = db.execute(
+            select(AgentLog).order_by(AgentLog.id.desc()).limit(limit)
+        ).scalars().all()
         out = []
         for r in rows:
+            try:
+                steps = json.loads(r.steps) if r.steps else []
+            except Exception:
+                steps = []
             out.append({
                 "id": r.id,
+                "learner_id": r.learner_id,
                 "task": r.task,
-                "employee": r.employee_name,
+                "current_level": r.current_level,
+                "target_level": r.target_level,
+                "specialty": r.specialty,
                 "steps_count": r.steps_count,
                 "status": r.status,
-                "created_at": r.created_at.isoformat() if r.created_at else "",
                 "total_latency_ms": r.total_latency_ms,
+                "steps": steps,
+                "final_answer": r.final_answer or "",
+                "created_at": r.created_at.isoformat() if r.created_at else "",
             })
-        db.close()
-        return out
-    except Exception as e:
-        logger.error(f"Failed to list agent logs: {e}")
-        return []
+        return {"logs": out, "total": int(total)}

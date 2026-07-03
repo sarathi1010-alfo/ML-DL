@@ -12,10 +12,9 @@ from ..database import engine
 from ..services.metrics_service import metrics_service
 from ..services.model_registry import registry
 from ..services.llm_client import llm_client
-from ..models.prediction import Prediction
 from ..schemas.metrics import (
     HealthResponse, MetricsResponse, ApiUsage, LatencyStats, ModelMetricOut,
-    SystemStats, EndpointStat, TimeSeriesPoint, ModelMetricOut,
+    SystemStats, EndpointStat, TimeSeriesPoint,
 )
 
 router = APIRouter(prefix="", tags=["monitoring"])
@@ -51,20 +50,25 @@ def _model_metrics(db: Session) -> list[ModelMetricOut]:
     snap = metrics_service.snapshot()
     models_info = snap["models"]
     out: list[ModelMetricOut] = []
-    # Map model key -> display name + base stats
+    # Map model key -> display name + base stats (MediLingua's 6 models)
     base = {
-        "Churn XGBoost": {"accuracy": getattr(registry._churn, "accuracy", 0.82) if registry._churn else 0.82,
-                          "f1": getattr(registry._churn, "f1", 0.74) if registry._churn else 0.74, "rmse": 0.0},
-        "Premium XGBoost": {"accuracy": 0.0, "f1": 0.0,
-                            "rmse": (registry._premium.metrics["rmse"] if registry._premium else 5.5)},
-        "Damage ResNet50-CV": {"accuracy": getattr(registry._damage, "accuracy", 0.92) if registry._damage else 0.92,
-                                "f1": getattr(registry._damage, "f1", 0.91) if registry._damage else 0.91, "rmse": 0.0},
-        "Forecast Attention-LSTM": {"accuracy": 0.0, "f1": 0.0,
-                                     "rmse": (registry._forecast.metrics["rmse"] if registry._forecast else 5.1)},
-        "BERT TF-IDF Proxy": {"accuracy": getattr(registry._bert, "accuracy", 0.93) if registry._bert else 0.93,
-                               "f1": getattr(registry._bert, "f1", 0.92) if registry._bert else 0.92, "rmse": 0.0},
-        "RAG FAISS": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
+        "Proficiency RF+XGB": {
+            "accuracy": getattr(registry._proficiency, "accuracy", 0.82) if registry._proficiency else 0.82,
+            "f1": getattr(registry._proficiency, "f1", 0.80) if registry._proficiency else 0.80,
+            "rmse": 0.0,
+        },
+        "Acquisition LightGBM+Attn": {
+            "accuracy": 0.0, "f1": 0.0,
+            "rmse": (registry._acquisition.metrics["rmse"] if registry._acquisition else 4.5),
+        },
+        "NLP Rule-Based": {
+            "accuracy": getattr(registry._nlp, "accuracy", 0.88) if registry._nlp else 0.88,
+            "f1": getattr(registry._nlp, "f1", 0.86) if registry._nlp else 0.86,
+            "rmse": 0.0,
+        },
         "SLM TinyLlama-Q4": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
+        "GenAI LLM": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
+        "Agent ReAct": {"accuracy": 0.0, "f1": 0.0, "rmse": 0.0},
     }
     for name, info in base.items():
         calls = models_info.get(name, {}).get("calls", 0)

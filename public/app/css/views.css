@@ -31,7 +31,7 @@
 .login-aurora::after {
   width: 50vw; height: 50vw;
   bottom: -10%; right: -10%;
-  background: radial-gradient(circle, var(--violet), transparent 60%);
+  background: radial-gradient(circle, var(--sky), transparent 60%);
   animation: auroraShift 28s ease-in-out infinite reverse;
 }
 .login-grid {
@@ -516,3 +516,190 @@
 /* recommendations */
 .rec-item { display: flex; gap: var(--space-3); align-items: flex-start; padding: var(--space-2) var(--space-3); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .rec-num { width: 20px; height: 20px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+
+/* ============================================================
+   MediLingua-specific styles
+   ============================================================ */
+
+/* ============ PROFICIENCY (ML Level) ============ */
+.level-badge-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
+.level-badge {
+  display: flex; align-items: center; justify-content: center;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: var(--primary-grad);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  box-shadow: var(--shadow-glow), inset 0 0 0 4px rgba(255,255,255,0.18);
+  animation: scaleIn var(--t-slow);
+}
+.level-badge.c2 { background: linear-gradient(135deg, #6366f1, #0ea5e9); }
+.level-badge.c1 { background: linear-gradient(135deg, #0ea5e9, #14b8a6); }
+.level-badge.b2 { background: var(--primary-grad); }
+.level-badge.b1 { background: linear-gradient(135deg, #14b8a6, #10b981); }
+.level-badge.a2 { background: linear-gradient(135deg, #f59e0b, #10b981); }
+.level-badge.a1 { background: linear-gradient(135deg, #f59e0b, #f43f5e); }
+
+.level-scale-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-2); margin-top: var(--space-4); }
+.level-scale-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--space-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.level-scale-cell.win { background: var(--primary-soft); border-color: var(--primary); }
+.level-scale-cell .lbl { font-family: var(--font-mono); font-weight: 700; font-size: var(--font-size-md); }
+.level-scale-cell .bar { width: 100%; height: 6px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
+.level-scale-cell .bar-fill { height: 100%; background: var(--primary-grad); border-radius: 3px; transition: width 0.6s; }
+.level-scale-cell.win .bar-fill { background: linear-gradient(90deg, var(--accent), var(--primary)); }
+.level-scale-cell .pct { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+
+.recommendation-row { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); align-items: flex-start; }
+.recommendation-row.high { border-left: 3px solid var(--danger); }
+.recommendation-row.medium { border-left: 3px solid var(--warning); }
+.recommendation-row.low { border-left: 3px solid var(--info); }
+.recommendation-row .rec-area { font-weight: 700; font-size: var(--font-size-sm); }
+.recommendation-row .rec-action { font-size: var(--font-size-sm); color: var(--text-muted); margin-top: 2px; }
+.recommendation-row .rec-pri { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-xs); text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0; }
+.rec-pri.high { background: var(--danger-soft); color: var(--danger); }
+.rec-pri.medium { background: var(--warning-soft); color: var(--warning); }
+.rec-pri.low { background: var(--info-soft); color: var(--info); }
+
+/* ============ TRACKER (DL Level) ============ */
+.forecast-card { padding: var(--space-4); }
+.mastery-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: linear-gradient(135deg, var(--primary-soft), var(--surface-2)); border: 1px solid var(--primary); border-radius: var(--radius-md); }
+.mastery-card .m-title { font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); font-weight: 700; }
+.mastery-card .m-value { font-family: var(--font-mono); font-size: var(--font-size-3xl); font-weight: 700; line-height: 1; }
+.mastery-card .m-sub { font-size: var(--font-size-sm); color: var(--text-muted); }
+.intervention-card { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); background: linear-gradient(135deg, var(--accent-soft), var(--surface-2)); border: 1px solid var(--accent); border-radius: var(--radius-md); }
+.intervention-card .i-title { font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 700; }
+.intervention-card .i-value { font-family: var(--font-mono); font-size: var(--font-size-2xl); font-weight: 700; }
+.metric-mini-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+.metric-mini { padding: var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); text-align: center; }
+.metric-mini .mm-val { font-family: var(--font-mono); font-size: var(--font-size-xl); font-weight: 700; }
+.metric-mini .mm-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+
+/* ============ ANALYZER (NLP) ============ */
+.entity-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+}
+.entity-chip .entity-icd { background: var(--surface); padding: 1px 6px; border-radius: var(--radius-xs); font-family: var(--font-mono); color: var(--text-muted); font-size: 10px; }
+.entity-chip.symptom { background: var(--danger-soft); color: var(--danger); }
+.entity-chip.condition { background: var(--warning-soft); color: var(--warning); }
+.entity-chip.medication { background: var(--info-soft); color: var(--info); }
+.entity-chip.procedure { background: var(--primary-soft); color: var(--primary); }
+.entity-chip.anatomy { background: var(--accent-soft); color: var(--accent); }
+
+.grammar-error-row { display: grid; grid-template-columns: 1fr 1fr 90px; gap: var(--space-3); align-items: center; padding: var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); border-left: 3px solid var(--warning); }
+.grammar-error-row.medium { border-left-color: var(--warning); }
+.grammar-error-row.high { border-left-color: var(--danger); }
+.grammar-error-row.low { border-left-color: var(--info); }
+.grammar-error-row .ge-error { font-size: var(--font-size-sm); font-weight: 600; }
+.grammar-error-row .ge-correction { font-family: var(--font-mono); font-size: var(--font-size-sm); color: var(--primary); }
+.grammar-error-row .ge-sev { font-size: 10px; padding: 2px 8px; border-radius: var(--radius-xs); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; text-align: center; }
+.ge-sev.medium { background: var(--warning-soft); color: var(--warning); }
+.ge-sev.high { background: var(--danger-soft); color: var(--danger); }
+.ge-sev.low { background: var(--info-soft); color: var(--info); }
+
+.sentiment-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: var(--radius-pill); font-weight: 600; font-size: var(--font-size-sm); }
+.sentiment-badge.positive { background: var(--success-soft); color: var(--success); }
+.sentiment-badge.neutral { background: var(--info-soft); color: var(--info); }
+.sentiment-badge.negative { background: var(--danger-soft); color: var(--danger); }
+
+/* ============ SCENARIO (SLM) ============ */
+.tabs-bar { display: flex; gap: var(--space-1); padding: var(--space-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: var(--space-4); }
+.tab-btn { flex: 1; padding: 10px 14px; border: none; background: transparent; color: var(--text-muted); font-size: var(--font-size-sm); font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); transition: all var(--t); display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tab-btn:hover { color: var(--text); background: var(--surface); }
+.tab-btn.active { background: var(--primary-grad); color: #fff; }
+
+.term-card { padding: var(--space-4); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.term-card .term-name { font-family: var(--font-mono); font-weight: 700; font-size: var(--font-size-md); color: var(--primary); margin-bottom: 4px; }
+.term-card .term-def { font-size: var(--font-size-sm); color: var(--text); line-height: 1.55; }
+.term-card .term-ex { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: var(--space-2); padding: var(--space-2); background: var(--surface); border-radius: var(--radius-sm); border-left: 2px solid var(--accent); font-style: italic; }
+
+.discussion-q { display: flex; gap: var(--space-3); padding: var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); align-items: flex-start; }
+.discussion-q .q-num { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.related-term-chip { display: inline-block; padding: 4px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: var(--font-size-xs); color: var(--text-muted); cursor: pointer; transition: all var(--t); }
+.related-term-chip:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ============ STUDIO (GenAI) ============ */
+.studio-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-5); }
+@media (max-width: 900px) { .studio-cards { grid-template-columns: 1fr; } }
+.studio-card { padding: var(--space-5); background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius-lg); cursor: pointer; transition: all var(--t); }
+.studio-card:hover { transform: translateY(-2px); border-color: var(--primary); box-shadow: var(--shadow-md); }
+.studio-card.active { border-color: var(--primary); background: var(--primary-soft); }
+.studio-card .sc-icon { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--primary-soft); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-3); }
+.studio-card.active .sc-icon { background: var(--primary); color: #fff; }
+.studio-card .sc-title { font-weight: 700; font-size: var(--font-size-md); }
+.studio-card .sc-desc { font-size: var(--font-size-sm); color: var(--text-muted); margin-top: 4px; }
+
+.quiz-question { padding: var(--space-4); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: var(--space-3); }
+.quiz-question .q-text { font-weight: 600; font-size: var(--font-size-md); margin-bottom: var(--space-3); }
+.quiz-option { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all var(--t); margin-bottom: 6px; }
+.quiz-option:hover { border-color: var(--primary); }
+.quiz-option.selected { border-color: var(--accent); background: var(--accent-soft); }
+.quiz-option.correct { border-color: var(--success); background: var(--success-soft); }
+.quiz-option.wrong { border-color: var(--danger); background: var(--danger-soft); }
+.quiz-option .opt-letter { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--text-muted); font-family: var(--font-mono); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.quiz-option.correct .opt-letter { background: var(--success); color: #fff; }
+.quiz-option.wrong .opt-letter { background: var(--danger); color: #fff; }
+.quiz-option .opt-text { font-size: var(--font-size-sm); flex: 1; }
+.quiz-explanation { padding: var(--space-3); background: var(--info-soft); border-left: 3px solid var(--info); border-radius: var(--radius-sm); font-size: var(--font-size-sm); margin-top: var(--space-2); color: var(--text); line-height: 1.55; }
+
+.case-study-text { font-size: var(--font-size-sm); line-height: 1.7; color: var(--text); white-space: pre-line; padding: var(--space-4); background: var(--surface-2); border-radius: var(--radius-md); border-left: 3px solid var(--primary); }
+
+.objective-item { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-2); font-size: var(--font-size-sm); }
+.objective-item .o-check { color: var(--success); flex-shrink: 0; margin-top: 2px; }
+
+.simulation-text { font-family: var(--font-sans); font-size: var(--font-size-md); line-height: 1.7; padding: var(--space-5); background: linear-gradient(135deg, var(--accent-soft), var(--surface-2)); border: 1px solid var(--accent); border-radius: var(--radius-md); white-space: pre-line; }
+
+/* ============ TUTOR (Agentic AI) ============ */
+.path-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); padding: var(--space-4); background: linear-gradient(135deg, var(--primary-soft), var(--surface-2)); border: 1px solid var(--primary); border-radius: var(--radius-md); }
+.path-summary .ps-cell { display: flex; flex-direction: column; gap: 4px; }
+.path-summary .ps-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600; }
+.path-summary .ps-val { font-family: var(--font-mono); font-size: var(--font-size-xl); font-weight: 700; color: var(--primary); }
+.path-summary .ps-sub { font-size: var(--font-size-xs); color: var(--text-muted); }
+.focus-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.focus-chip { padding: 2px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: 10px; color: var(--text); font-family: var(--font-mono); }
+
+/* ============ SPECIALTY SELECT ============ */
+.specialty-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: var(--space-2); }
+.specialty-chip { padding: var(--space-2) var(--space-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); font-size: var(--font-size-sm); cursor: pointer; transition: all var(--t); text-align: center; }
+.specialty-chip:hover { border-color: var(--primary); color: var(--primary); }
+.specialty-chip.active { background: var(--primary-grad); color: #fff; border-color: transparent; }
+
+/* ============ EXAMPLE CHIPS ============ */
+.example-chip { padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-pill); font-size: var(--font-size-xs); cursor: pointer; transition: all var(--t); color: var(--text-muted); }
+.example-chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* ============ COMMUNICATION SCORE GAUGE WRAP ============ */
+.score-display { display: flex; align-items: center; gap: var(--space-5); }
+.score-display .score-num { font-family: var(--font-mono); font-size: 64px; font-weight: 800; line-height: 1; background: var(--primary-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.score-display .score-meta { display: flex; flex-direction: column; gap: 4px; }
+.score-display .score-lbl { font-size: var(--font-size-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600; }
+.score-display .score-grade { font-size: var(--font-size-md); color: var(--text); }
+
+/* ============ CONVERSATION PRACTICE ============ */
+.converse-messages { max-height: 320px; overflow-y: auto; padding: var(--space-4); background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: var(--space-3); }
+.correction-item { display: flex; gap: var(--space-2); padding: var(--space-2) var(--space-3); background: var(--warning-soft); border-left: 2px solid var(--warning); border-radius: var(--radius-sm); font-size: var(--font-size-xs); }
+.correction-item .ci-orig { color: var(--danger); text-decoration: line-through; font-family: var(--font-mono); }
+.correction-item .ci-arrow { color: var(--text-muted); }
+.correction-item .ci-fix { color: var(--success); font-family: var(--font-mono); font-weight: 600; }
+
+/* ============ READABILITY CLARITY ============ */
+.clarity-tag { display: inline-block; padding: 2px 8px; border-radius: var(--radius-pill); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.clarity-tag.good { background: var(--success-soft); color: var(--success); }
+.clarity-tag.fair { background: var(--warning-soft); color: var(--warning); }
+.clarity-tag.poor { background: var(--danger-soft); color: var(--danger); }
+
+/* ============ FORM SLIDER VALUE DISPLAY ============ */
+.slider-row .slider-val { color: var(--primary); }
+
+/* ============ QUICK ACTIONS MEDICAL ============ */
+.quick-action .qa-icon.medical { background: linear-gradient(135deg, var(--primary-soft), var(--accent-soft)); color: var(--primary); }

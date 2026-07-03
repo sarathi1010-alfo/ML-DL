@@ -1,52 +1,43 @@
 /* ============================================================
-   app.js — bootstrap: theme toggle, sidebar, topbar, status bar,
-   global state, router wiring, init.
+   app.js — MediLingua bootstrap: theme toggle, sidebar, topbar,
+   status bar, global state, router wiring, init.
    ============================================================ */
 (function () {
   const U = window.U;
   const API = window.API;
   const Router = window.Router;
 
+  // Single sidebar section per spec: 9 nav items + login (hidden when authed)
   const NAV = [
-    { section: 'Overview', items: [
-      { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { section: 'Learning Suite', items: [
+      { path: '/dashboard',   label: 'Dashboard',            icon: 'dashboard' },
+      { path: '/proficiency', label: 'Proficiency Assessment', icon: 'gauge' },
+      { path: '/tracker',     label: 'Learning Tracker',     icon: 'tracker' },
+      { path: '/analyzer',    label: 'Communication Analyzer', icon: 'analyzer' },
+      { path: '/scenario',    label: 'Scenario Practice',    icon: 'scenario' },
+      { path: '/studio',      label: 'Content Studio',       icon: 'studio' },
+      { path: '/tutor',       label: 'AI Tutor',             icon: 'tutor' },
     ]},
-    { section: 'AI Models', items: [
-      { path: '/churn', label: 'Churn Prediction', icon: 'churn' },
-      { path: '/healthcare', label: 'Healthcare Premium', icon: 'health' },
-      { path: '/damage', label: 'Damage Detection', icon: 'damage' },
-      { path: '/nlp', label: 'NLP / BERT', icon: 'nlp' },
-    ]},
-    { section: 'GenAI', items: [
-      { path: '/rag', label: 'RAG Assistant', icon: 'rag' },
-      { path: '/agent', label: 'Agentic AI', icon: 'agent' },
-      { path: '/slm', label: 'SLM Edge', icon: 'slm' },
-    ]},
-    { section: 'Operations', items: [
-      { path: '/monitoring', label: 'Model Monitoring', icon: 'monitor' },
-      { path: '/settings', label: 'Settings', icon: 'settings' },
+    { section: 'System', items: [
+      { path: '/monitoring',  label: 'Model Monitoring',     icon: 'monitor' },
+      { path: '/settings',    label: 'Settings',             icon: 'settings' },
     ]}
   ];
 
   /* ---------- Theme ---------- */
   function getTheme() {
-    return localStorage.getItem('aiplatform_theme') || 'dark';
+    return localStorage.getItem('medilingua_theme') || 'dark';
   }
   function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('aiplatform_theme', theme);
-    // In dark theme, show the SUN icon (suggests "switch to light"); in light theme, show MOON.
+    localStorage.setItem('medilingua_theme', theme);
     document.querySelectorAll('.theme-toggle').forEach(btn => {
-      const sun = btn.querySelector('.icon');
-      // The icons are siblings; toggle visibility based on current theme
       const icons = btn.querySelectorAll('svg.icon');
       icons.forEach((ic, i) => {
-        // first icon = sun, second = moon
         const isSun = i === 0;
         ic.style.display = (theme === 'dark' && isSun) || (theme === 'light' && !isSun) ? '' : 'none';
       });
     });
-    // re-render charts (colors depend on CSS vars)
     setTimeout(() => window.Charts && Charts.rerenderAll(), 80);
   }
   function toggleTheme() {
@@ -62,10 +53,10 @@
     const sidebar = U.el('aside', { class: 'sidebar' });
     // Brand
     sidebar.appendChild(U.el('div', { class: 'brand' }, [
-      U.el('img', { src: '/app/assets/logo.svg', class: 'brand-logo', alt: 'logo' }),
+      U.el('img', { src: '/app/assets/logo.svg', class: 'brand-logo', alt: 'MediLingua logo' }),
       U.el('div', { class: 'brand-text' }, [
-        U.el('div', { class: 'brand-name', text: 'AI Engineering' }),
-        U.el('div', { class: 'brand-sub', text: 'Platform v1.0' })
+        U.el('div', { class: 'brand-name', text: 'MediLingua' }),
+        U.el('div', { class: 'brand-sub', text: 'Medical Language Learning' })
       ])
     ]));
 
@@ -94,7 +85,7 @@
       U.el('div', { class: 'user-mini', onClick: () => Router.navigate('/settings') }, [
         U.el('div', { class: 'avatar accent sm', text: (user && (user.username || user.email || 'U')[0].toUpperCase()) || 'U' }),
         U.el('div', { style: { flex: '1', minWidth: '0' } }, [
-          U.el('div', { style: { fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }, text: (user && user.username) || 'Demo User' }),
+          U.el('div', { style: { fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }, text: (user && user.username) || 'Demo Learner' }),
           U.el('div', { class: 'text-xs text-muted', text: (user && user.role) || 'demo' })
         ]),
         U.icon('chevronRight', 16, 2)
@@ -108,38 +99,30 @@
   /* ---------- Build topbar ---------- */
   function buildTopbar() {
     const topbar = U.el('header', { class: 'topbar' });
-    // Hamburger
     const ham = U.el('div', { class: 'hamburger', onClick: toggleSidebar }, [U.icon('menu', 20)]);
     topbar.appendChild(ham);
-
-    // Page title
     topbar.appendChild(U.el('div', { class: 'page-title', text: 'Dashboard' }));
 
-    // Search
     const search = U.el('div', { class: 'topbar-search' }, [
       U.el('div', { class: 'input-group' }, [
         U.el('div', { class: 'lead' }, [U.icon('search', 16, 2)]),
-        U.el('input', { class: 'input', type: 'search', placeholder: 'Search predictions, models, docs…' })
+        U.el('input', { class: 'input', type: 'search', placeholder: 'Search modules, terms, scenarios…' })
       ])
     ]);
     topbar.appendChild(search);
 
-    // Actions
     const actions = U.el('div', { class: 'topbar-actions' });
 
-    // Theme toggle
     const themeBtn = U.el('div', { class: 'icon-btn theme-toggle always-show', onClick: toggleTheme, title: 'Toggle theme', dataset: { menu: 'theme' } }, [
       U.icon('sun', 18, 2),
       U.icon('moon', 18, 2)
     ]);
     actions.appendChild(themeBtn);
 
-    // Notifications
     const notif = U.el('div', { class: 'icon-btn always-show', title: 'Notifications', dataset: { menu: 'notif' }, onClick: (e) => { e.stopPropagation(); toggleDropdown(notif); } }, [U.icon('bell', 18, 2)]);
     notif.appendChild(U.el('span', { class: 'dot-indicator' }));
     actions.appendChild(notif);
 
-    // User avatar
     const userWrap = U.el('div', { class: 'icon-btn always-show', dataset: { menu: 'user' }, onClick: (e) => { e.stopPropagation(); toggleDropdown(userWrap); } }, [
       U.el('div', { class: 'avatar sm', text: (API.getUser() && (API.getUser().username || 'U')[0].toUpperCase()) || 'U' })
     ]);
@@ -151,7 +134,6 @@
   }
 
   function toggleDropdown(host) {
-    // close other dropdowns
     document.querySelectorAll('.dropdown').forEach(d => { if (d._host !== host) d.remove(); });
     if (host.querySelector('.dropdown')) { host.querySelector('.dropdown').remove(); return; }
 
@@ -173,8 +155,8 @@
     const user = API.getUser();
     const d = U.el('div', { class: 'dropdown', style: { minWidth: '240px' } });
     d.appendChild(U.el('div', { class: 'dropdown-head' }, [
-      U.el('div', { style: { fontWeight: 600 }, text: (user && user.username) || 'Demo User' }),
-      U.el('div', { class: 'text-xs text-muted', text: (user && user.email) || 'demo@ai-platform.local' })
+      U.el('div', { style: { fontWeight: 600 }, text: (user && user.username) || 'Demo Learner' }),
+      U.el('div', { class: 'text-xs text-muted', text: (user && user.email) || 'demo@medilingua.local' })
     ]));
     const items = [
       { icon: 'user', label: 'Profile', action: () => Router.navigate('/settings') },
@@ -195,8 +177,9 @@
     d.appendChild(U.el('div', { class: 'dropdown-head' }, [U.el('div', { style: { fontWeight: 600 }, text: 'Recent activity' })]));
     const events = [
       { icon: 'check', color: 'var(--success)', text: 'All models healthy', time: 'just now' },
-      { icon: 'zap', color: 'var(--accent)', text: 'RAG index updated', time: '2m ago' },
-      { icon: 'activity', color: 'var(--info)', text: 'p99 latency within SLA', time: '8m ago' },
+      { icon: 'pulse', color: 'var(--accent)', text: 'New study streak: 7 days', time: '2m ago' },
+      { icon: 'tutor', color: 'var(--info)', text: 'AI Tutor designed a new path', time: '8m ago' },
+      { icon: 'award', color: 'var(--warning)', text: 'Communication score improved 6 pts', time: '1h ago' },
     ];
     events.forEach(e => {
       d.appendChild(U.el('div', { class: 'dropdown-item' }, [
@@ -270,15 +253,15 @@
       if (d.models) {
         const loaded = Object.values(d.models).filter(v => /loaded|ready/.test(String(v))).length;
         const total = Object.keys(d.models).length;
-        modelsTxt.textContent = `Models: ${loaded}/${total} loaded`;
+        modelsTxt.textContent = `Models: ${loaded}/${total} ready`;
       }
       if (d.uptime_seconds != null) uptimeTxt.textContent = 'uptime ' + U.fmtUptime(d.uptime_seconds);
     } else {
       dot.className = 'dot dot-danger pulse';
-      txt.textContent = 'Backend: disconnected';
-      llmDot.className = 'dot dot-danger';
-      llmTxt.textContent = 'LLM: offline';
-      modelsTxt.textContent = 'Models: —';
+      txt.textContent = 'Backend: offline (demo data)';
+      llmDot.className = 'dot dot-warning';
+      llmTxt.textContent = 'LLM: simulated';
+      modelsTxt.textContent = 'Models: demo';
       uptimeTxt.textContent = '';
     }
   }
@@ -294,7 +277,6 @@
     shell.appendChild(content);
     shell.appendChild(buildStatusBar());
 
-    // Backdrop for mobile sidebar
     const backdrop = U.el('div', { class: 'sidebar-backdrop', onClick: toggleSidebar });
     shell.appendChild(backdrop);
 
@@ -303,30 +285,23 @@
 
   /* ---------- Boot ---------- */
   async function boot() {
-    // Build the shell
     buildShell();
-
-    // Theme (after shell so icon visibility is set correctly)
     setTheme(getTheme());
 
-    // Close dropdowns on outside click
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.dropdown') && !e.target.closest('.icon-btn')) {
         document.querySelectorAll('.dropdown').forEach(d => d.remove());
       }
     });
 
-    // Register routes (views register themselves via window.Views)
     const views = window.Views || {};
     Object.keys(views).forEach(path => {
       Router.register(path, { path, title: views[path].title, render: views[path].render });
     });
 
-    // Probe backend immediately and every 30s
     probeBackend();
     setInterval(probeBackend, 30000);
 
-    // Start router
     Router.start();
   }
 

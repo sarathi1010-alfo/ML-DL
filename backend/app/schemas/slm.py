@@ -1,47 +1,57 @@
-"""SLM schemas."""
+"""SLM (Medical Scenario Generator) schemas."""
 from __future__ import annotations
+from typing import Literal
 from pydantic import BaseModel, Field
 
 
-class SlmInferRequest(BaseModel):
-    prompt: str = Field(..., min_length=1, max_length=4000)
+SpecialtyT = Literal["cardiology", "neurology", "pediatrics", "emergency", "general"]
+DifficultyT = Literal["beginner", "intermediate", "advanced"]
+ScenarioTypeT = Literal["patient_consultation", "case_discussion", "emergency_response", "differential_diagnosis"]
 
 
-class SlmInferResponse(BaseModel):
-    response: str
-    latency_ms: int
-    tokens: int
-    tokens_per_sec: float
-    backend: str = "llm"
-    model: str = "TinyLlama-1.1B-Q4"
-    quantization: str = "Q4_0 GGUF"
+class ScenarioRequest(BaseModel):
+    specialty: SpecialtyT = "general"
+    difficulty: DifficultyT = "intermediate"
+    scenario_type: ScenarioTypeT = "patient_consultation"
 
 
-class EdgeDevice(BaseModel):
-    id: str
-    hostname: str
-    cpu: str
-    cores: int
+class TerminologyItem(BaseModel):
+    term: str
+    definition: str
+    example: str
 
 
-class SlmStatusResponse(BaseModel):
+class ScenarioResponse(BaseModel):
+    scenario: str
+    terminology: list[TerminologyItem]
+    questions: list[str]
     model: str
-    quantization: str
-    size_mb: float
-    context_window: int = 2048
-    avg_latency_ms: float
-    peak_latency_ms: float = 0.0
-    avg_tokens_per_sec: float = 0.0
-    avg_tokens_per_call: float = 0.0
-    total_inferences: int = 0
-    total_tokens_generated: int = 0
-    error_count: int = 0
-    uptime_seconds: float = 0.0
-    memory_mb: float
-    cpu_percent: float = 0.0
-    llm_backend: str = "connected"
-    status: str
-    device: EdgeDevice | None = None
-    # Back-compat
-    devices: list[str] = []
-    memory_mb_static: float = 0.0
+    latency_ms: int
+
+
+class ExplainRequest(BaseModel):
+    term: str = Field(..., min_length=1, max_length=200)
+    specialty: SpecialtyT = "general"
+
+
+class ExplainResponse(BaseModel):
+    term: str
+    explanation: str
+    examples: list[str]
+    related_terms: list[str]
+    model: str
+    latency_ms: int
+
+
+class ConverseRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+    context: str = ""
+    specialty: SpecialtyT = "general"
+
+
+class ConverseResponse(BaseModel):
+    response: str
+    corrections: list[str]
+    suggestions: list[str]
+    model: str
+    latency_ms: int

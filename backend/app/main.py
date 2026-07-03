@@ -1,7 +1,7 @@
-"""FastAPI app entrypoint.
+"""FastAPI app entrypoint — MediLingua backend.
 
 Creates the app, configures middleware, registers routers, and runs startup
-tasks (init DB, seed admin, warm up models, seed RAG KB).
+tasks (init DB, seed admin, warm up models, record start time).
 """
 from __future__ import annotations
 import time
@@ -23,15 +23,15 @@ from .services.metrics_service import metrics_service
 from .middleware.request_logger import RequestLoggerMiddleware
 from .middleware.rate_limit import RateLimitMiddleware
 from .routers import (
-    auth_router, churn_router, premium_router, damage_router,
-    forecast_router, bert_router, rag_router, agent_router,
-    slm_router, metrics_router, predictions_router,
+    auth_router, assess_router, track_router, analyze_router,
+    slm_router, genai_router, agent_router,
+    metrics_router, predictions_router,
 )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting AI Engineering Platform API...")
+    logger.info("Starting MediLingua API...")
     # 1) Init DB
     init_db()
     logger.info("Database initialized.")
@@ -42,19 +42,9 @@ async def lifespan(app: FastAPI):
         logger.info("Admin user seeded.")
     finally:
         db.close()
-    # 3) Warm up core models in background-friendly order
+    # 3) Warm up core ML models (proficiency, acquisition, nlp) + init services
     registry.warm_up()
-    # 4) Initialize RAG (seeds default KB)
-    try:
-        _ = registry.rag
-    except Exception as e:
-        logger.error(f"RAG init failed: {e}")
-    # 5) Initialize SLM
-    try:
-        _ = registry.slm
-    except Exception as e:
-        logger.error(f"SLM init failed: {e}")
-    # 6) Record start time
+    # 4) Record start time
     metrics_service.start_time = time.time()
     logger.info("Startup complete.")
     yield
@@ -64,7 +54,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
-    description="Production-grade AI Engineering Platform backend (FastAPI).",
+    description="MediLingua — Personalized Language Learning for Medical Professionals (Problem Statement 105).",
     lifespan=lifespan,
 )
 
@@ -92,13 +82,19 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 # Routers — all under /api/v1
 API_PREFIX = "/api/v1"
 for r in (
-    auth_router, churn_router, premium_router, damage_router,
-    forecast_router, bert_router, rag_router, agent_router,
-    slm_router, metrics_router, predictions_router,
+    auth_router, assess_router, track_router, analyze_router,
+    slm_router, genai_router, agent_router,
+    metrics_router, predictions_router,
 ):
     app.include_router(r, prefix=API_PREFIX)
 
 
 @app.get("/")
 def root():
-    return {"name": settings.app_name, "version": settings.app_version, "docs": "/docs", "api": API_PREFIX}
+    return {
+        "name": settings.app_name,
+        "version": settings.app_version,
+        "docs": "/docs",
+        "api": API_PREFIX,
+        "problem_statement": 105,
+    }

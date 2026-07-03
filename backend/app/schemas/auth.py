@@ -12,6 +12,7 @@ class RegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=64)
     email: str = Field(..., max_length=128)
     password: str = Field(..., min_length=6, max_length=128)
+    specialty: str = Field(default="general", max_length=64)
 
 
 class UserOut(BaseModel):
@@ -19,6 +20,7 @@ class UserOut(BaseModel):
     username: str
     email: str
     role: str
+    specialty: str = "general"
     is_active: bool = True
 
     class Config:

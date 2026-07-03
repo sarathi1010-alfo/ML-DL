@@ -1,27 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
   <defs>
-    <linearGradient id="aiLogoGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+    <linearGradient id="medGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#10b981"/>
-      <stop offset="0.5" stop-color="#14b8a6"/>
+      <stop offset="0.55" stop-color="#14b8a6"/>
       <stop offset="1" stop-color="#06b6d4"/>
     </linearGradient>
-    <linearGradient id="aiLogoAccent" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#d946ef"/>
+    <linearGradient id="medBubble" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0ea5e9"/>
+      <stop offset="1" stop-color="#6366f1"/>
     </linearGradient>
   </defs>
-  <!-- Outer hexagon -->
-  <path d="M24 3 L41 12.5 L41 35.5 L24 45 L7 35.5 L7 12.5 Z"
-        stroke="url(#aiLogoGrad)" stroke-width="2.4" stroke-linejoin="round" fill="none"/>
-  <!-- Inner neural brain mesh -->
-  <g stroke="url(#aiLogoGrad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9">
-    <path d="M16 18 Q24 12 32 18 Q34 24 32 30 Q24 36 16 30 Q14 24 16 18 Z"/>
-    <path d="M20 22 L28 22 M20 26 L28 26"/>
-  </g>
-  <!-- Accent nodes -->
-  <circle cx="16" cy="18" r="2.2" fill="url(#aiLogoAccent)"/>
-  <circle cx="32" cy="18" r="2.2" fill="url(#aiLogoAccent)"/>
-  <circle cx="16" cy="30" r="2.2" fill="url(#aiLogoAccent)"/>
-  <circle cx="32" cy="30" r="2.2" fill="url(#aiLogoAccent)"/>
-  <circle cx="24" cy="24" r="2.8" fill="url(#aiLogoGrad)"/>
+  <!-- Speech bubble (outer) -->
+  <path d="M8 9 H40 A4 4 0 0 1 44 13 V30 A4 4 0 0 1 40 34 H22 L13 42 V34 H8 A4 4 0 0 1 4 30 V13 A4 4 0 0 1 8 9 Z"
+        fill="url(#medBubble)" opacity="0.16"/>
+  <path d="M8 9 H40 A4 4 0 0 1 44 13 V30 A4 4 0 0 1 40 34 H22 L13 42 V34 H8 A4 4 0 0 1 4 30 V13 A4 4 0 0 1 8 9 Z"
+        stroke="url(#medBubble)" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+  <!-- Medical cross (inner) -->
+  <path d="M24 13 V31 M15 22 H33"
+        stroke="url(#medGrad)" stroke-width="5.5" stroke-linecap="round"/>
+  <!-- Cross accent dot -->
+  <circle cx="24" cy="22" r="2.4" fill="#ffffff" opacity="0.9"/>
 </svg>
